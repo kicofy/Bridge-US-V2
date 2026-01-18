@@ -1,0 +1,49 @@
+import { Home, FileText, Building2, Heart, GraduationCap, Briefcase, TrendingUp } from 'lucide-react';
+import { cn } from './ui/utils';
+
+const categories = [
+  { id: 'all', label: 'All Posts', icon: Home },
+  { id: 'visa', label: 'Visa & Immigration', icon: FileText },
+  { id: 'housing', label: 'Housing', icon: Building2 },
+  { id: 'health', label: 'Health & Wellness', icon: Heart },
+  { id: 'campus', label: 'Campus Life', icon: GraduationCap },
+  { id: 'work', label: 'Work & Internships', icon: Briefcase },
+  { id: 'trending', label: 'Trending Topics', icon: TrendingUp },
+];
+
+interface CategorySidebarProps {
+  selectedCategory: string;
+  onSelectCategory: (categoryId: string) => void;
+}
+
+export function CategorySidebar({ selectedCategory, onSelectCategory }: CategorySidebarProps) {
+  return (
+    <aside className="sticky top-20 hidden w-64 shrink-0 lg:block">
+      <div className="rounded-2xl border bg-white p-4 shadow-sm">
+        <h3 className="mb-4 px-3 text-sm text-muted-foreground">Categories</h3>
+        <nav className="space-y-1">
+          {categories.map((category) => {
+            const Icon = category.icon;
+            const isSelected = selectedCategory === category.id;
+            
+            return (
+              <button
+                key={category.id}
+                onClick={() => onSelectCategory(category.id)}
+                className={cn(
+                  "flex w-full items-start gap-3 rounded-xl px-3 py-2.5 transition-all",
+                  isSelected
+                    ? "bg-[var(--bridge-blue-light)] text-[var(--bridge-blue)]"
+                    : "text-foreground hover:bg-secondary"
+                )}
+              >
+                <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+                <span className="text-sm text-left">{category.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+    </aside>
+  );
+}
