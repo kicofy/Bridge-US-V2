@@ -47,6 +47,11 @@
   --bridge-green-light: #e8f5ef;
   --trust-gold: #f4a460;
   --trust-verified: #5fb78a;
+  
+  /* Glassmorphism colors */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --glass-shadow: rgba(74, 144, 164, 0.1);
 }
 
 .dark {
@@ -190,4 +195,77 @@
 
 html {
   font-size: var(--font-size);
+}
+
+/* Glassmorphism Utilities */
+@layer utilities {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px 0 var(--glass-shadow);
+  }
+  
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 8px 32px 0 rgba(74, 144, 164, 0.15);
+  }
+  
+  .glass-subtle {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 16px 0 rgba(74, 144, 164, 0.08);
+  }
+}
+
+/* Aurora Background Animation */
+@layer base {
+  .aurora-bg {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .aurora-bg::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 20% 50%, rgba(74, 144, 164, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(95, 183, 138, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(74, 144, 164, 0.1) 0%, transparent 50%);
+    animation: aurora 20s ease-in-out infinite;
+    z-index: 0;
+  }
+  
+  @keyframes aurora {
+    0%, 100% {
+      transform: translate(0, 0) rotate(0deg);
+      opacity: 0.8;
+    }
+    25% {
+      transform: translate(10%, 10%) rotate(90deg);
+      opacity: 1;
+    }
+    50% {
+      transform: translate(-5%, 20%) rotate(180deg);
+      opacity: 0.9;
+    }
+    75% {
+      transform: translate(-10%, 5%) rotate(270deg);
+      opacity: 1;
+    }
+  }
+  
+  .aurora-bg > * {
+    position: relative;
+    z-index: 1;
+  }
 }

@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from './ui/sheet';
 import { cn } from './ui/utils';
 import { useState } from 'react';
+import { use3DHover } from '../hooks/use3DHover';
 
 const categories = [
   { id: 'all', label: 'All Posts', icon: Home },
@@ -23,6 +24,7 @@ export function MobileCategorySelector({ selectedCategory, onSelectCategory }: M
   const [open, setOpen] = useState(false);
   const selectedCategoryData = categories.find(cat => cat.id === selectedCategory);
   const SelectedIcon = selectedCategoryData?.icon || Home;
+  const trigger3D = use3DHover({ maxRotation: 6, scale: 1.02 });
 
   const handleSelect = (categoryId: string) => {
     onSelectCategory(categoryId);
@@ -32,18 +34,26 @@ export function MobileCategorySelector({ selectedCategory, onSelectCategory }: M
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button 
-          variant="outline" 
-          className="w-full justify-between rounded-xl border-2 h-12 px-4"
+        <div
+          ref={trigger3D.ref}
+          style={trigger3D.style}
+          onMouseMove={trigger3D.onMouseMove}
+          onMouseEnter={trigger3D.onMouseEnter}
+          onMouseLeave={trigger3D.onMouseLeave}
         >
-          <div className="flex items-center gap-2">
-            <SelectedIcon className="h-4 w-4 text-[var(--bridge-blue)]" />
-            <span className="font-medium">{selectedCategoryData?.label}</span>
-          </div>
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        </Button>
+          <Button 
+            variant="outline" 
+            className="w-full justify-between rounded-xl glass-subtle border-2 h-12 px-4"
+          >
+            <div className="flex items-center gap-2">
+              <SelectedIcon className="h-4 w-4 text-[var(--bridge-blue)]" />
+              <span className="font-medium">{selectedCategoryData?.label}</span>
+            </div>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </Button>
+        </div>
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-6">
+      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-6 glass-strong">
         <SheetTitle className="mb-6 text-center">Select Category</SheetTitle>
         <nav className="space-y-2 overflow-y-auto max-h-[calc(85vh-100px)]">
           {categories.map((category) => {
@@ -51,30 +61,52 @@ export function MobileCategorySelector({ selectedCategory, onSelectCategory }: M
             const isSelected = selectedCategory === category.id;
             
             return (
-              <button
+              <CategoryButton
                 key={category.id}
-                onClick={() => handleSelect(category.id)}
-                className={cn(
-                  "flex w-full items-center gap-4 rounded-2xl px-4 py-4 transition-all",
-                  isSelected
-                    ? "bg-[var(--bridge-blue-light)] text-[var(--bridge-blue)] shadow-sm"
-                    : "text-foreground hover:bg-secondary active:bg-secondary/80"
-                )}
-              >
-                <div className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-xl",
-                  isSelected 
-                    ? "bg-[var(--bridge-blue)] text-white" 
-                    : "bg-secondary"
-                )}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <span className="text-base font-medium text-left">{category.label}</span>
-              </button>
+                category={category}
+                isSelected={isSelected}
+                onSelect={handleSelect}
+              />
             );
           })}
         </nav>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function CategoryButton({ category, isSelected, onSelect }: {
+  category: typeof categories[0];
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}) {
+  const btn3D = use3DHover({ maxRotation: 8, scale: 1.03 });
+  const Icon = category.icon;
+
+  return (
+    <button
+      ref={btn3D.ref}
+      style={btn3D.style}
+      onMouseMove={btn3D.onMouseMove}
+      onMouseEnter={btn3D.onMouseEnter}
+      onMouseLeave={btn3D.onMouseLeave}
+      onClick={() => onSelect(category.id)}
+      className={cn(
+        "flex w-full items-center gap-4 rounded-2xl px-4 py-4 transition-all",
+        isSelected
+          ? "bg-[var(--bridge-blue-light)] text-[var(--bridge-blue)] shadow-sm"
+          : "text-foreground hover:bg-secondary active:bg-secondary/80"
+      )}
+    >
+      <div className={cn(
+        "flex h-10 w-10 items-center justify-center rounded-xl",
+        isSelected 
+          ? "bg-[var(--bridge-blue)] text-white" 
+          : "bg-secondary"
+      )}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <span className="text-base font-medium text-left">{category.label}</span>
+    </button>
   );
 }

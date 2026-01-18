@@ -1,6 +1,7 @@
 import { Languages } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { use3DHover } from '../hooks/use3DHover';
 
 interface TranslationToggleProps {
   isTranslated: boolean;
@@ -9,6 +10,8 @@ interface TranslationToggleProps {
 }
 
 export function TranslationToggle({ isTranslated, originalLanguage, onToggle }: TranslationToggleProps) {
+  const toggle3D = use3DHover({ maxRotation: 8, scale: 1.05 });
+
   return (
     <div className="flex items-center gap-2">
       <Badge variant="outline" className="gap-1 rounded-lg">
@@ -17,14 +20,22 @@ export function TranslationToggle({ isTranslated, originalLanguage, onToggle }: 
           {isTranslated ? `Translated from ${originalLanguage}` : `Original (${originalLanguage})`}
         </span>
       </Badge>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onToggle}
-        className="h-7 rounded-lg px-2 text-xs"
+      <div
+        ref={toggle3D.ref}
+        style={toggle3D.style}
+        onMouseMove={toggle3D.onMouseMove}
+        onMouseEnter={toggle3D.onMouseEnter}
+        onMouseLeave={toggle3D.onMouseLeave}
       >
-        {isTranslated ? 'Show Original' : 'Translate'}
-      </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggle}
+          className="h-7 rounded-lg px-2 text-xs"
+        >
+          {isTranslated ? 'Show Original' : 'Translate'}
+        </Button>
+      </div>
     </div>
   );
 }

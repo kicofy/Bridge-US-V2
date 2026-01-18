@@ -1,5 +1,6 @@
 import { Home, FileText, Building2, Heart, GraduationCap, Briefcase, TrendingUp } from 'lucide-react';
 import { cn } from './ui/utils';
+import { Card3D } from './Card3D';
 
 const categories = [
   { id: 'all', label: 'All Posts', icon: Home },
@@ -19,7 +20,11 @@ interface CategorySidebarProps {
 export function CategorySidebar({ selectedCategory, onSelectCategory }: CategorySidebarProps) {
   return (
     <aside className="sticky top-20 hidden w-64 shrink-0 lg:block">
-      <div className="rounded-2xl border bg-white p-4 shadow-sm">
+      <Card3D 
+        className="rounded-2xl glass p-4 shadow-sm"
+        maxRotation={5}
+        scale={1.01}
+      >
         <h3 className="mb-4 px-3 text-sm text-muted-foreground">Categories</h3>
         <nav className="space-y-1">
           {categories.map((category) => {
@@ -43,7 +48,7 @@ export function CategorySidebar({ selectedCategory, onSelectCategory }: Category
             );
           })}
         </nav>
-      </div>
+      </Card3D>
     </aside>
   );
 }

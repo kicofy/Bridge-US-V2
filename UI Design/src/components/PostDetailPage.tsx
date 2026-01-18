@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Shield, CheckCircle2, Info, Send } from 'lucide-react';
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Shield, CheckCircle2, Info, Send, Flag } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { TranslationToggle } from './TranslationToggle';
+import { RichTextDisplay } from './RichTextDisplay';
+import { ReportDialog } from './ReportDialog';
 import { Post } from './PostCard';
+import { use3DHover } from '../hooks/use3DHover';
 import {
   Tooltip,
   TooltipContent,
@@ -70,6 +73,7 @@ export function PostDetailPage({ post, onBack, onAuthorClick, language = 'en' }:
   const [isTranslated, setIsTranslated] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [replies, setReplies] = useState<Reply[]>(mockReplies);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   const handleSubmitReply = () => {
     if (!replyText.trim()) return;
@@ -95,7 +99,54 @@ export function PostDetailPage({ post, onBack, onAuthorClick, language = 'en' }:
     onAuthorClick?.(authorName);
   };
 
-  const fullContent = `${post.preview}\n\nThis is where the full detailed content of the post would be displayed. The author can provide comprehensive information, share their experiences, and ask detailed questions to the community.\n\nInternational students can benefit from reading complete posts as they often contain nuanced details that might be crucial for making informed decisions about visa applications, housing choices, healthcare options, and campus life.\n\nThe BridgeUS platform encourages detailed, well-researched posts that help build a trustworthy knowledge base for the entire international student community.`;
+  const handleReport = (reason: string, details: string) => {
+    // In a real app, this would send the report to the backend
+    console.log('Report submitted:', { postId: post.id, reason, details });
+    
+    // Show success message (could use toast notification)
+    alert('Thank you for your report. Our moderation team will review it shortly.');
+  };
+
+  // Example rich text content with markdown formatting
+  const fullContent = `${post.preview}
+
+## My Experience with the F-1 Visa Process
+
+I recently completed my F-1 visa application and wanted to share some **important details** that might help others going through the same process.
+
+### Required Documents
+
+The process requires several key documents:
+
+- Valid passport (must be valid for at least 6 months beyond your stay)
+- Form I-20 from your university
+- SEVIS payment receipt
+- Visa application confirmation page
+- Financial documents proving you can support yourself
+
+### Timeline and Processing
+
+*Processing times can vary significantly* depending on your location. I recommend applying at least **3 months** before your intended start date.
+
+For the most current processing times, check the [USCIS Processing Times](https://egov.uscis.gov/processing-times/) website.
+
+### Helpful Tips
+
+1. Make copies of **everything** - I learned this the hard way
+2. Arrive at the embassy at least 30 minutes early
+3. Be prepared to explain your study plans in detail
+
+## Visual Aid
+
+Here's a helpful flowchart I found during my research:
+
+![F-1 Visa Process Flowchart](https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&auto=format&fit=crop)
+
+## Final Thoughts
+
+The key to success is **thorough preparation** and having all documents organized. Don't hesitate to reach out to your university's international student office - they're there to help!
+
+Feel free to ask any questions below, and I'll do my best to help based on my experience.`;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -201,11 +252,9 @@ export function PostDetailPage({ post, onBack, onAuthorClick, language = 'en' }:
           ))}
         </div>
 
-        {/* Full content */}
-        <div className="mb-6 prose prose-sm sm:prose max-w-none">
-          <p className="text-sm sm:text-base text-foreground whitespace-pre-line leading-relaxed">
-            {fullContent}
-          </p>
+        {/* Full content with rich text formatting */}
+        <div className="mb-6">
+          <RichTextDisplay content={fullContent} className="text-sm sm:text-base" />
         </div>
 
         {/* Action buttons */}
@@ -230,22 +279,87 @@ export function PostDetailPage({ post, onBack, onAuthorClick, language = 'en' }:
             <MessageCircle className="h-4 w-4" />
             <span className="text-sm">{replies.length} Replies</span>
           </div>
+          <div className="ml-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsReportDialogOpen(true)}
+              className="gap-2 rounded-lg text-muted-foreground hover:text-red-600 px-3 sm:px-4 h-9 sm:h-10"
+            >
+              <Flag className="h-4 w-4" />
+              <span className="text-sm hidden sm:inline">Report</span>
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Reply input */}
-      <div className="rounded-2xl border bg-white p-4 sm:p-6 shadow-sm">
-        <h3 className="mb-4 text-base sm:text-lg font-semibold">Add a Reply</h3>
-        <div className="space-y-3">
-          <textarea
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            placeholder="Share your thoughts, experiences, or helpful advice..."
-            className="w-full min-h-[100px] sm:min-h-[120px] rounded-xl border bg-background p-3 sm:p-4 text-sm sm:text-base resize-none focus:outline-none focus:ring-2 focus:ring-[var(--bridge-blue)]"
+      {/* Report Dialog */}
+      <ReportDialog
+        isOpen={isReportDialogOpen}
+        onClose={() => setIsReportDialogOpen(false)}
+        onSubmit={handleReport}
+        contentType="post"
+      />
+
+      {/* Reply input - simple textarea */}
+      <ReplyInputCard
+        replyText={replyText}
+        onReplyTextChange={setReplyText}
+        onSubmit={handleSubmitReply}
+      />
+
+      {/* Replies */}
+      <div className="space-y-4">
+        <h3 className="text-base sm:text-lg font-semibold px-1">
+          {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
+        </h3>
+        {replies.map((reply) => (
+          <ReplyCard
+            key={reply.id}
+            reply={reply}
+            onAuthorClick={handleAuthorClick}
           />
-          <div className="flex justify-end">
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ReplyInputCard({ replyText, onReplyTextChange, onSubmit }: {
+  replyText: string;
+  onReplyTextChange: (text: string) => void;
+  onSubmit: () => void;
+}) {
+  const card3D = use3DHover({ maxRotation: 5, scale: 1.01 });
+  const submitBtn3D = use3DHover({ maxRotation: 6, scale: 1.05 });
+
+  return (
+    <div
+      ref={card3D.ref}
+      style={card3D.style}
+      onMouseMove={card3D.onMouseMove}
+      onMouseEnter={card3D.onMouseEnter}
+      onMouseLeave={card3D.onMouseLeave}
+      className="rounded-2xl border bg-white p-4 sm:p-6 shadow-sm"
+    >
+      <h3 className="mb-4 text-base sm:text-lg font-semibold">Add a Reply</h3>
+      <div className="space-y-3">
+        <textarea
+          value={replyText}
+          onChange={(e) => onReplyTextChange(e.target.value)}
+          placeholder="Share your thoughts, experiences, or helpful advice..."
+          className="w-full min-h-[100px] sm:min-h-[120px] rounded-xl border bg-background p-3 sm:p-4 text-sm sm:text-base resize-none focus:outline-none focus:ring-2 focus:ring-[var(--bridge-blue)]"
+        />
+        <div className="flex justify-end">
+          <div
+            ref={submitBtn3D.ref}
+            style={submitBtn3D.style}
+            onMouseMove={submitBtn3D.onMouseMove}
+            onMouseEnter={submitBtn3D.onMouseEnter}
+            onMouseLeave={submitBtn3D.onMouseLeave}
+          >
             <Button
-              onClick={handleSubmitReply}
+              onClick={onSubmit}
               disabled={!replyText.trim()}
               className="gap-2 rounded-xl bg-[var(--bridge-blue)] hover:bg-[var(--bridge-blue)]/90"
             >
@@ -255,62 +369,90 @@ export function PostDetailPage({ post, onBack, onAuthorClick, language = 'en' }:
           </div>
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Replies */}
-      <div className="space-y-4">
-        <h3 className="text-base sm:text-lg font-semibold px-1">
-          {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
-        </h3>
-        {replies.map((reply) => (
-          <div key={reply.id} className="rounded-2xl border bg-white p-4 sm:p-5 shadow-sm">
-            <div className="mb-3 flex items-start gap-3">
-              <button
-                onClick={(e) => handleAuthorClick(e, reply.author.name)}
-                className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bridge-blue-light)] to-[var(--bridge-green-light)] text-[var(--bridge-blue)] text-sm sm:text-base hover:opacity-80 transition-opacity"
-              >
-                {reply.author.name.charAt(0)}
-              </button>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <button
-                    onClick={(e) => handleAuthorClick(e, reply.author.name)}
-                    className="text-sm font-medium hover:text-[var(--bridge-blue)] transition-colors"
-                  >
-                    {reply.author.name}
-                  </button>
-                  {reply.author.verified && (
-                    <CheckCircle2 className="h-4 w-4 text-[var(--trust-verified)]" />
-                  )}
-                  {reply.author.credibilityScore >= 80 && (
-                    <Shield className="h-4 w-4 text-[var(--trust-gold)]" />
-                  )}
-                </div>
-                <span className="text-xs text-muted-foreground">{reply.timestamp}</span>
-              </div>
-            </div>
-            <p className="mb-3 text-sm sm:text-base text-foreground leading-relaxed">
-              {reply.content}
-            </p>
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="gap-1.5 rounded-lg text-muted-foreground hover:text-[var(--bridge-green)] h-8 px-2 sm:px-3"
-              >
-                <ThumbsUp className="h-3.5 w-3.5" />
-                <span className="text-xs">Helpful ({reply.helpfulCount})</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="gap-1.5 rounded-lg text-muted-foreground hover:text-destructive h-8 px-2 sm:px-3"
-              >
-                <ThumbsDown className="h-3.5 w-3.5" />
-                <span className="text-xs hidden sm:inline">Not Helpful</span>
-              </Button>
-            </div>
+function ReplyCard({ reply, onAuthorClick }: {
+  reply: Reply;
+  onAuthorClick: (e: React.MouseEvent, authorName: string) => void;
+}) {
+  const card3D = use3DHover({ maxRotation: 6, scale: 1.02 });
+  const helpful3D = use3DHover({ maxRotation: 6, scale: 1.05 });
+  const notHelpful3D = use3DHover({ maxRotation: 6, scale: 1.05 });
+
+  return (
+    <div
+      ref={card3D.ref}
+      style={card3D.style}
+      onMouseMove={card3D.onMouseMove}
+      onMouseEnter={card3D.onMouseEnter}
+      onMouseLeave={card3D.onMouseLeave}
+      className="rounded-2xl border bg-white p-4 sm:p-5 shadow-sm"
+    >
+      <div className="mb-3 flex items-start gap-3">
+        <button
+          onClick={(e) => onAuthorClick(e, reply.author.name)}
+          className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bridge-blue-light)] to-[var(--bridge-green-light)] text-[var(--bridge-blue)] text-sm sm:text-base hover:opacity-80 transition-opacity"
+        >
+          {reply.author.name.charAt(0)}
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <button
+              onClick={(e) => onAuthorClick(e, reply.author.name)}
+              className="text-sm font-medium hover:text-[var(--bridge-blue)] transition-colors"
+            >
+              {reply.author.name}
+            </button>
+            {reply.author.verified && (
+              <CheckCircle2 className="h-4 w-4 text-[var(--trust-verified)]" />
+            )}
+            {reply.author.credibilityScore >= 80 && (
+              <Shield className="h-4 w-4 text-[var(--trust-gold)]" />
+            )}
           </div>
-        ))}
+          <span className="text-xs text-muted-foreground">{reply.timestamp}</span>
+        </div>
+      </div>
+      <div className="mb-3">
+        <p className="mb-3 text-sm sm:text-base text-foreground leading-relaxed">
+          {reply.content}
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        <div
+          ref={helpful3D.ref}
+          style={helpful3D.style}
+          onMouseMove={helpful3D.onMouseMove}
+          onMouseEnter={helpful3D.onMouseEnter}
+          onMouseLeave={helpful3D.onMouseLeave}
+        >
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="gap-1.5 rounded-lg text-muted-foreground hover:text-[var(--bridge-green)] h-8 px-2 sm:px-3"
+          >
+            <ThumbsUp className="h-3.5 w-3.5" />
+            <span className="text-xs">Helpful ({reply.helpfulCount})</span>
+          </Button>
+        </div>
+        <div
+          ref={notHelpful3D.ref}
+          style={notHelpful3D.style}
+          onMouseMove={notHelpful3D.onMouseMove}
+          onMouseEnter={notHelpful3D.onMouseEnter}
+          onMouseLeave={notHelpful3D.onMouseLeave}
+        >
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="gap-1.5 rounded-lg text-muted-foreground hover:text-destructive h-8 px-2 sm:px-3"
+          >
+            <ThumbsDown className="h-3.5 w-3.5" />
+            <span className="text-xs hidden sm:inline">Not Helpful</span>
+          </Button>
+        </div>
       </div>
     </div>
   );

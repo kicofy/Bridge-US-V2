@@ -1,26 +1,26 @@
-import { useState, useMemo } from 'react';
-import { Search } from 'lucide-react';
-import { Input } from './ui/input';
-import { SearchFilters } from './SearchFilters';
-import { PostCard, Post } from './PostCard';
-import { mockPosts } from '../lib/mockData';
+import { useState, useMemo } from "react";
+import { Search } from "lucide-react";
+import { Input } from "./ui/input";
+import { SearchFilters } from "./SearchFilters";
+import { PostCard, Post } from "./PostCard";
+import { mockPosts } from "../lib/mockData";
 
 interface SearchPageProps {
   onPostClick?: (post: Post) => void;
   onAuthorClick?: (authorName: string) => void;
 }
 
-export function SearchPage({ onPostClick, onAuthorClick }: SearchPageProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+export function SearchPage({
+  onPostClick,
+  onAuthorClick,
+}: SearchPageProps) {
+  const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
-    language: 'all',
-    topic: 'all',
-    visaType: 'all',
-    schoolLevel: 'all',
+    topic: "all",
   });
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   // Filter posts based on search and filters
@@ -34,23 +34,23 @@ export function SearchPage({ onPostClick, onAuthorClick }: SearchPageProps) {
 
     // Filter by search query
     const query = searchQuery.toLowerCase();
-    results = results.filter(post =>
-      post.title.toLowerCase().includes(query) ||
-      post.preview.toLowerCase().includes(query) ||
-      post.tags.some(tag => tag.toLowerCase().includes(query))
+    results = results.filter(
+      (post) =>
+        post.title.toLowerCase().includes(query) ||
+        post.preview.toLowerCase().includes(query) ||
+        post.tags.some((tag) =>
+          tag.toLowerCase().includes(query),
+        ),
     );
 
     // Filter by topic
-    if (filters.topic !== 'all') {
-      results = results.filter(post =>
-        post.tags.some(tag => tag.toLowerCase().includes(filters.topic.toLowerCase()))
-      );
-    }
-
-    // Filter by visa type
-    if (filters.visaType !== 'all') {
-      results = results.filter(post =>
-        post.tags.some(tag => tag.toLowerCase().includes(filters.visaType.toLowerCase()))
+    if (filters.topic !== "all") {
+      results = results.filter((post) =>
+        post.tags.some((tag) =>
+          tag
+            .toLowerCase()
+            .includes(filters.topic.toLowerCase()),
+        ),
       );
     }
 
@@ -59,7 +59,9 @@ export function SearchPage({ onPostClick, onAuthorClick }: SearchPageProps) {
 
   return (
     <div className="flex-1">
-      <h1 className="mb-4 sm:mb-6 text-2xl sm:text-3xl">Search & Discover</h1>
+      <h1 className="mb-4 sm:mb-6 text-2xl sm:text-3xl">
+        Search & Discover
+      </h1>
 
       {/* Search bar */}
       <div className="mb-4 sm:mb-6">
@@ -75,14 +77,19 @@ export function SearchPage({ onPostClick, onAuthorClick }: SearchPageProps) {
         </div>
         {searchQuery && (
           <p className="mt-2 text-xs sm:text-sm text-muted-foreground px-1">
-            Found {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"
+            Found {searchResults.length} result
+            {searchResults.length !== 1 ? "s" : ""} for "
+            {searchQuery}"
           </p>
         )}
       </div>
 
       {/* Filters */}
       <div className="mb-6">
-        <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
+        <SearchFilters
+          filters={filters}
+          onFilterChange={handleFilterChange}
+        />
       </div>
 
       {/* Results - only show when there's a search query */}
@@ -90,8 +97,8 @@ export function SearchPage({ onPostClick, onAuthorClick }: SearchPageProps) {
         <div className="space-y-3 sm:space-y-4">
           {searchResults.length > 0 ? (
             searchResults.map((post) => (
-              <PostCard 
-                key={post.id} 
+              <PostCard
+                key={post.id}
                 post={post}
                 onClick={() => onPostClick?.(post)}
                 onAuthorClick={onAuthorClick}
@@ -100,7 +107,9 @@ export function SearchPage({ onPostClick, onAuthorClick }: SearchPageProps) {
           ) : (
             <div className="rounded-2xl border bg-white p-8 sm:p-12 text-center">
               <Search className="mx-auto mb-4 h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
-              <h3 className="mb-2 text-base sm:text-lg">No results found</h3>
+              <h3 className="mb-2 text-base sm:text-lg">
+                No results found
+              </h3>
               <p className="text-sm sm:text-base text-muted-foreground">
                 Try adjusting your filters or search terms
               </p>
@@ -113,9 +122,12 @@ export function SearchPage({ onPostClick, onAuthorClick }: SearchPageProps) {
       {!searchQuery.trim() && (
         <div className="rounded-2xl border bg-white p-8 sm:p-12 text-center">
           <Search className="mx-auto mb-4 h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground opacity-50" />
-          <h3 className="mb-2 text-base sm:text-lg text-muted-foreground">Start your search</h3>
+          <h3 className="mb-2 text-base sm:text-lg text-muted-foreground">
+            Start your search
+          </h3>
           <p className="text-sm sm:text-base text-muted-foreground">
-            Enter keywords to search for posts, topics, or information
+            Enter keywords to search for posts, topics, or
+            information
           </p>
         </div>
       )}

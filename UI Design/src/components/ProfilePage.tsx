@@ -1,15 +1,17 @@
-import { Shield, CheckCircle2, Award, MessageCircle, ThumbsUp, Calendar, MapPin } from 'lucide-react';
+import { Shield, CheckCircle2, Award, MessageCircle, ThumbsUp, Calendar, MapPin, Settings } from 'lucide-react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { Separator } from './ui/separator';
 import { PostCard, Post } from './PostCard';
 import { mockPosts } from '../lib/mockData';
+import { Button } from './ui/button';
 
 interface ProfilePageProps {
   userName?: string;
   onPostClick?: (post: Post) => void;
   onAuthorClick?: (authorName: string) => void;
+  onAdminAccess?: () => void;
 }
 
 // Mock user database
@@ -112,7 +114,7 @@ const mockUsers: Record<string, any> = {
   },
 };
 
-export function ProfilePage({ userName, onPostClick, onAuthorClick }: ProfilePageProps) {
+export function ProfilePage({ userName, onPostClick, onAuthorClick, onAdminAccess }: ProfilePageProps) {
   // Get user data - either the specified user or the default current user
   const user = userName && mockUsers[userName] ? mockUsers[userName] : mockUsers['Sarah Chen'];
 
@@ -341,6 +343,20 @@ export function ProfilePage({ userName, onPostClick, onAuthorClick }: ProfilePag
                 })}
               </div>
             </div>
+
+            {/* Admin Access Button */}
+            {onAdminAccess && (
+              <div className="mt-6">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={onAdminAccess}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Admin Access
+                </Button>
+              </div>
+            )}
           </Card>
         </aside>
 

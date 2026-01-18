@@ -178,7 +178,7 @@ export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAu
             )}
           </>
         ) : (
-          <div className="rounded-2xl border bg-white p-8 sm:p-12 text-center">
+          <div className="rounded-2xl glass p-8 sm:p-12 text-center">
             <p className="text-sm sm:text-base text-muted-foreground">No posts found in this category yet.</p>
           </div>
         )}

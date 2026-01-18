@@ -3,6 +3,7 @@ import { ThumbsUp, ThumbsDown, MessageCircle, Shield, CheckCircle2, Info } from 
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { TranslationToggle } from './TranslationToggle';
+import { Card3D } from './Card3D';
 import {
   Tooltip,
   TooltipContent,
@@ -52,16 +53,18 @@ export function PostCard({ post, language = 'en', onClick, onAuthorClick }: Post
   };
 
   return (
-    <div 
+    <Card3D 
       onClick={handleCardClick}
-      className="group rounded-2xl border bg-white p-4 sm:p-6 shadow-sm transition-all hover:shadow-md cursor-pointer"
+      className="group rounded-2xl glass p-4 sm:p-6 shadow-sm transition-all hover:shadow-lg cursor-pointer"
+      maxRotation={6}
+      scale={1.01}
     >
       {/* Header with author info */}
       <div className="mb-3 sm:mb-4 flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <button
             onClick={handleAuthorClick}
-            className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bridge-blue-light)] to-[var(--bridge-green-light)] text-[var(--bridge-blue)] text-sm sm:text-base hover:opacity-80 transition-opacity"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bridge-blue-light)] to-[var(--bridge-green-light)] text-[var(--bridge-blue)] text-sm sm:text-base hover:opacity-80 transition-opacity backdrop-blur-sm"
           >
             {post.author.name.charAt(0)}
           </button>
@@ -143,7 +146,7 @@ export function PostCard({ post, language = 'en', onClick, onAuthorClick }: Post
           <Badge 
             key={tag} 
             variant="secondary" 
-            className="rounded-lg bg-[var(--bridge-blue-light)] text-[var(--bridge-blue)] hover:bg-[var(--bridge-blue-light)] text-xs"
+            className="rounded-lg glass-subtle text-[var(--bridge-blue)] hover:glass text-xs border-0"
           >
             {tag}
           </Badge>
@@ -179,6 +182,6 @@ export function PostCard({ post, language = 'en', onClick, onAuthorClick }: Post
           <span className="text-xs">{post.replyCount} <span className="hidden xs:inline">Replies</span></span>
         </Button>
       </div>
-    </div>
+    </Card3D>
   );
 }

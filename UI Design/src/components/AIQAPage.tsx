@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Send, Bot, User, Lightbulb, AlertTriangle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
+import { Card3D } from './Card3D';
 import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
