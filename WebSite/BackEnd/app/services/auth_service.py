@@ -129,11 +129,15 @@ async def send_email_code(db: AsyncSession, email: str, purpose: str) -> str:
     )
     await db.commit()
     if settings.smtp_host or settings.email_smtp_host or settings.email_host:
-        subject = "BridgeUS Verification Code"
+        subject = "BridgeUS verification code"
         plain = (
-            f"Your BridgeUS verification code is: {code}\n\n"
-            f"It expires in {settings.email_code_expire_minutes} minutes."
+            "BridgeUS verification code\n"
+            f"Code: {code}\n"
+            f"Expires in: {settings.email_code_expire_minutes} minutes\n\n"
+            "If you did not request this code, please ignore this email.\n"
+            "Need help? Contact support at support@bridge-us.org\n"
         )
+        logo_url = "https://bridge-us.org/Logo.png"
         html = f"""
 <!doctype html>
 <html>
@@ -141,7 +145,7 @@ async def send_email_code(db: AsyncSession, email: str, purpose: str) -> str:
     <div style="max-width:640px;margin:0 auto;padding:32px;">
       <div style="background:#ffffff;border:1px solid #e6eef5;border-radius:20px;padding:28px;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#4a90a4,#5fb78a);"></div>
+          <img src="{logo_url}" alt="BridgeUS" width="44" height="44" style="border-radius:12px;display:block;" />
           <div>
             <div style="font-size:18px;font-weight:700;color:#2b3a4a;">BridgeUS</div>
             <div style="font-size:12px;color:#8a96a3;">Verification Code</div>
@@ -156,6 +160,9 @@ async def send_email_code(db: AsyncSession, email: str, purpose: str) -> str:
         </div>
         <p style="margin:20px 0 0;color:#8a96a3;font-size:12px;">
           If you didn’t request this, you can safely ignore this email.
+        </p>
+        <p style="margin:8px 0 0;color:#8a96a3;font-size:12px;">
+          Need help? Contact support at support@bridge-us.org
         </p>
       </div>
       <div style="text-align:center;margin-top:16px;color:#9aa7b3;font-size:12px;">
