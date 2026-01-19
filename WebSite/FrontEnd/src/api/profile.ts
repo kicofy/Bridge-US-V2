@@ -19,6 +19,12 @@ export async function getMyProfile() {
   });
 }
 
+export async function getProfileById(userId: string) {
+  return apiFetch<ProfileResponse>(`/profiles/${userId}`, {
+    method: 'GET',
+  });
+}
+
 export async function updateMyProfile(payload: {
   display_name?: string;
   avatar_url?: string | null;

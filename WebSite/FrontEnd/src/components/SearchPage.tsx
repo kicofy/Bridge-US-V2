@@ -12,7 +12,7 @@ import { Button } from "./ui/button";
 
 interface SearchPageProps {
   onPostClick?: (post: Post) => void;
-  onAuthorClick?: (authorName: string) => void;
+  onAuthorClick?: (authorId: string, authorName: string) => void;
   language?: string;
 }
 
@@ -51,6 +51,7 @@ export function SearchPage({
       notHelpfulCount: 0,
       tags: item.tags,
       author: {
+        id: item.author_id,
         name: displayName,
         verified: false,
         credibilityScore: 70,

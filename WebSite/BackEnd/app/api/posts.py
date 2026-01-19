@@ -22,11 +22,12 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 @router.get("", response_model=list[PostResponse])
 async def list_items(
     language: str = Query(default="en"),
+    author_id: str | None = Query(default=None),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
 ):
-    return await list_posts(db, language, limit, offset)
+    return await list_posts(db, language, limit, offset, author_id=author_id)
 
 
 @router.get("/me", response_model=list[PostResponse])

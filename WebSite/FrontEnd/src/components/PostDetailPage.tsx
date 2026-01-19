@@ -26,6 +26,7 @@ import {
 interface Reply {
   id: string;
   author: {
+    id: string;
     name: string;
     verified: boolean;
     credibilityScore: number;
@@ -38,7 +39,7 @@ interface Reply {
 interface PostDetailPageProps {
   post: Post;
   onBack: () => void;
-  onAuthorClick?: (authorName: string) => void;
+  onAuthorClick?: (authorId: string, authorName: string) => void;
 }
 
 const mockReplies: Reply[] = [
@@ -106,6 +107,7 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
     return {
       id: item.id,
       author: {
+        id: item.author_id,
         name,
         verified: false,
         credibilityScore: 70,
@@ -145,9 +147,10 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
     }
   };
 
-  const handleAuthorClick = (e: React.MouseEvent, authorName: string) => {
+  const handleAuthorClick = (e: React.MouseEvent, authorId: string, authorName: string) => {
     e.stopPropagation();
-    onAuthorClick?.(authorName);
+    if (!authorId) return;
+    onAuthorClick?.(authorId, authorName);
   };
 
   const handleReport = async (reason: string, details: string) => {
@@ -230,7 +233,7 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
         <div className="mb-4 sm:mb-6 flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
-              onClick={(e) => handleAuthorClick(e, activePost.author.name)}
+              onClick={(e) => handleAuthorClick(e, activePost.author.id || '', activePost.author.name)}
               className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bridge-blue-light)] to-[var(--bridge-green-light)] text-[var(--bridge-blue)] text-base sm:text-lg font-semibold hover:opacity-80 transition-opacity"
             >
               {activePost.author.name.charAt(0)}
@@ -238,7 +241,7 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <button
-                  onClick={(e) => handleAuthorClick(e, activePost.author.name)}
+                  onClick={(e) => handleAuthorClick(e, activePost.author.id || '', activePost.author.name)}
                   className="text-sm sm:text-base font-medium truncate hover:text-[var(--bridge-blue)] transition-colors"
                 >
                   {activePost.author.name}
@@ -447,7 +450,7 @@ function ReplyInputCard({ replyText, onReplyTextChange, onSubmit, submitLabel, t
 
 function ReplyCard({ reply, onAuthorClick, onHelpfulToggle, isHelpful }: {
   reply: Reply;
-  onAuthorClick: (e: React.MouseEvent, authorName: string) => void;
+  onAuthorClick: (e: React.MouseEvent, authorId: string, authorName: string) => void;
   onHelpfulToggle: (replyId: string) => void;
   isHelpful: boolean;
 }) {
@@ -466,7 +469,7 @@ function ReplyCard({ reply, onAuthorClick, onHelpfulToggle, isHelpful }: {
     >
       <div className="mb-3 flex items-start gap-3">
         <button
-          onClick={(e) => onAuthorClick(e, reply.author.name)}
+          onClick={(e) => onAuthorClick(e, reply.author.id, reply.author.name)}
           className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bridge-blue-light)] to-[var(--bridge-green-light)] text-[var(--bridge-blue)] text-sm sm:text-base hover:opacity-80 transition-opacity"
         >
           {reply.author.name.charAt(0)}
@@ -474,7 +477,7 @@ function ReplyCard({ reply, onAuthorClick, onHelpfulToggle, isHelpful }: {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <button
-              onClick={(e) => onAuthorClick(e, reply.author.name)}
+              onClick={(e) => onAuthorClick(e, reply.author.id, reply.author.name)}
               className="text-sm font-medium hover:text-[var(--bridge-blue)] transition-colors"
             >
               {reply.author.name}

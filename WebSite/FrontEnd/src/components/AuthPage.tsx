@@ -737,9 +737,6 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
               <span className="text-sm">{preferredLanguage === 'en' ? 'EN' : '中文'}</span>
             </Button>
           </div>
-          <p className="mt-3 text-sm text-muted-foreground text-left sm:text-center">
-            {t('auth.brandSubtitle')}
-          </p>
         </div>
 
         {/* Auth Card */}

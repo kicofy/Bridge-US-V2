@@ -36,7 +36,7 @@ function AppShell() {
   const { i18n } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [selectedUserName, setSelectedUserName] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const language = i18n.language === 'zh' ? 'zh' : 'en';
   const navigate = useNavigate();
   const location = useLocation();
@@ -102,9 +102,9 @@ function AppShell() {
     navigate(`/posts/${post.id}`);
   };
 
-  const handleAuthorClick = (authorName: string) => {
-    setSelectedUserName(authorName);
-    navigate(`/users/${encodeURIComponent(authorName)}`);
+  const handleAuthorClick = (authorId: string, _authorName: string) => {
+    setSelectedUserId(authorId);
+    navigate(`/users/${encodeURIComponent(authorId)}`);
   };
 
   const handleBackToPosts = () => {
@@ -127,8 +127,7 @@ function AppShell() {
     const target = pageRoutes[page] ?? '/';
     navigate(target);
     if (page === 'profile') {
-      // Reset to show current user's profile
-      setSelectedUserName(null);
+      setSelectedUserId(null);
     }
   };
 
@@ -247,7 +246,7 @@ function AppShell() {
                     element={
                       <RequireAuth isAuthenticated={isAuthenticated}>
                         <ProfilePage
-                          userName={currentUser?.displayName || selectedUserName || undefined}
+                          userId={selectedUserId || undefined}
                           onPostClick={handlePostClick}
                           onAuthorClick={handleAuthorClick}
                           onAdminAccess={() => navigate('/admin')}
@@ -259,7 +258,7 @@ function AppShell() {
                     path="/users/:username"
                     element={
                       <ProfileRoute
-                        selectedUserName={selectedUserName}
+                        selectedUserId={selectedUserId}
                         onPostClick={handlePostClick}
                         onAuthorClick={handleAuthorClick}
                         onAdminAccess={() => navigate('/admin')}
@@ -314,7 +313,7 @@ function AppShell() {
 function PostDetailRoute({ selectedPost, onBack, onAuthorClick, language }: {
   selectedPost: Post | null;
   onBack: () => void;
-  onAuthorClick: (authorName: string) => void;
+  onAuthorClick: (authorId: string, authorName: string) => void;
   language: string;
 }) {
   const { id } = useParams();
@@ -363,18 +362,18 @@ function PostDetailRoute({ selectedPost, onBack, onAuthorClick, language }: {
   );
 }
 
-function ProfileRoute({ selectedUserName, onPostClick, onAuthorClick, onAdminAccess }: {
-  selectedUserName: string | null;
+function ProfileRoute({ selectedUserId, onPostClick, onAuthorClick, onAdminAccess }: {
+  selectedUserId: string | null;
   onPostClick: (post: Post) => void;
-  onAuthorClick: (authorName: string) => void;
+  onAuthorClick: (authorId: string, authorName: string) => void;
   onAdminAccess: () => void;
 }) {
   const { username } = useParams();
-  const resolvedName = username ? decodeURIComponent(username) : selectedUserName || undefined;
+  const resolvedId = username ? decodeURIComponent(username) : selectedUserId || undefined;
 
   return (
     <ProfilePage
-      userName={resolvedName}
+      userId={resolvedId}
       onPostClick={onPostClick}
       onAuthorClick={onAuthorClick}
       onAdminAccess={onAdminAccess}
@@ -413,6 +412,7 @@ function mapPostResponse(item: PostResponse): Post {
     notHelpfulCount: 0,
     tags: item.tags,
     author: {
+      id: item.author_id,
       name: displayName,
       verified: false,
       credibilityScore: 70,

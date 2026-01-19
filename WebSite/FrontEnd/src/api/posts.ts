@@ -22,12 +22,16 @@ export async function listPosts(params: {
   language: string;
   limit?: number;
   offset?: number;
+  authorId?: string;
 }) {
   const query = new URLSearchParams({
     language: params.language,
     limit: String(params.limit ?? 20),
     offset: String(params.offset ?? 0),
   });
+  if (params.authorId) {
+    query.set('author_id', params.authorId);
+  }
   return apiFetch<PostResponse[]>(`/posts?${query.toString()}`, { method: 'GET', auth: false });
 }
 

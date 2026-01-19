@@ -19,6 +19,7 @@ export interface Post {
   notHelpfulCount?: number;
   tags: string[];
   author: {
+    id?: string;
     name: string;
     verified: boolean;
     credibilityScore: number;
@@ -33,7 +34,7 @@ export interface Post {
 interface PostCardProps {
   post: Post;
   onClick?: () => void;
-  onAuthorClick?: (authorName: string) => void;
+  onAuthorClick?: (authorId: string, authorName: string) => void;
 }
 
 export function PostCard({ post, onClick, onAuthorClick }: PostCardProps) {
@@ -51,7 +52,9 @@ export function PostCard({ post, onClick, onAuthorClick }: PostCardProps) {
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onAuthorClick?.(post.author.name);
+    if (post.author.id) {
+      onAuthorClick?.(post.author.id, post.author.name);
+    }
   };
 
   return (

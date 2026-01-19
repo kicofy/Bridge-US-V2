@@ -10,123 +10,23 @@ import { useEffect, useMemo, useState } from 'react';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { useAuthStore } from '../store/auth';
-import { getMyProfile, ProfileResponse, updateMyProfile } from '../api/profile';
-import { listMyPosts, PostResponse } from '../api/posts';
+import { getMyProfile, getProfileById, ProfileResponse, updateMyProfile } from '../api/profile';
+import { listMyPosts, listPosts, PostResponse } from '../api/posts';
 import { listMyReplies, ReplyResponse } from '../api/replies';
 import { listMyReports, ReportResponse } from '../api/reports';
 
 interface ProfilePageProps {
-  userName?: string;
+  userId?: string;
   onPostClick?: (post: Post) => void;
-  onAuthorClick?: (authorName: string) => void;
+  onAuthorClick?: (authorId: string, authorName: string) => void;
   onAdminAccess?: () => void;
 }
-
-// Mock user database
-const mockUsers: Record<string, any> = {
-  'Sarah Chen': {
-    name: 'Sarah Chen',
-    avatar: 'SC',
-    verified: true,
-    joinDate: 'January 2024',
-    location: 'Los Angeles, CA',
-    school: 'UCLA',
-    visaStatus: 'F-1 Student',
-    credibilityScore: 92,
-    helpfulnessScore: 88,
-    accuracyHistory: 95,
-    postsCount: 12,
-    helpfulAnswers: 147,
-    commentsCount: 89,
-    badges: [
-      { name: 'Verified Student', icon: CheckCircle2, color: 'text-[var(--trust-verified)]' },
-      { name: 'Trusted Contributor', icon: Shield, color: 'text-[var(--trust-gold)]' },
-      { name: 'Top Helper', icon: Award, color: 'text-[var(--bridge-blue)]' },
-    ],
-  },
-  'John Smith': {
-    name: 'John Smith',
-    avatar: 'JS',
-    verified: true,
-    joinDate: 'March 2024',
-    location: 'New York, NY',
-    school: 'NYU',
-    visaStatus: 'F-1 Student',
-    credibilityScore: 85,
-    helpfulnessScore: 82,
-    accuracyHistory: 88,
-    postsCount: 8,
-    helpfulAnswers: 95,
-    commentsCount: 64,
-    badges: [
-      { name: 'Verified Student', icon: CheckCircle2, color: 'text-[var(--trust-verified)]' },
-      { name: 'Trusted Contributor', icon: Shield, color: 'text-[var(--trust-gold)]' },
-    ],
-  },
-  'Maria Garcia': {
-    name: 'Maria Garcia',
-    avatar: 'MG',
-    verified: true,
-    joinDate: 'February 2024',
-    location: 'Boston, MA',
-    school: 'MIT',
-    visaStatus: 'F-1 Student',
-    credibilityScore: 92,
-    helpfulnessScore: 90,
-    accuracyHistory: 93,
-    postsCount: 15,
-    helpfulAnswers: 180,
-    commentsCount: 102,
-    badges: [
-      { name: 'Verified Student', icon: CheckCircle2, color: 'text-[var(--trust-verified)]' },
-      { name: 'Trusted Contributor', icon: Shield, color: 'text-[var(--trust-gold)]' },
-      { name: 'Top Helper', icon: Award, color: 'text-[var(--bridge-blue)]' },
-    ],
-  },
-  'Ahmed Hassan': {
-    name: 'Ahmed Hassan',
-    avatar: 'AH',
-    verified: true,
-    joinDate: 'April 2024',
-    location: 'Chicago, IL',
-    school: 'Northwestern',
-    visaStatus: 'F-1 Student',
-    credibilityScore: 88,
-    helpfulnessScore: 86,
-    accuracyHistory: 90,
-    postsCount: 10,
-    helpfulAnswers: 120,
-    commentsCount: 78,
-    badges: [
-      { name: 'Verified Student', icon: CheckCircle2, color: 'text-[var(--trust-verified)]' },
-      { name: 'Trusted Contributor', icon: Shield, color: 'text-[var(--trust-gold)]' },
-    ],
-  },
-  'Li Wei': {
-    name: 'Li Wei',
-    avatar: 'LW',
-    verified: false,
-    joinDate: 'May 2024',
-    location: 'San Francisco, CA',
-    school: 'Stanford',
-    visaStatus: 'F-1 Student',
-    credibilityScore: 65,
-    helpfulnessScore: 70,
-    accuracyHistory: 72,
-    postsCount: 5,
-    helpfulAnswers: 42,
-    commentsCount: 35,
-    badges: [
-      { name: 'Verified Student', icon: CheckCircle2, color: 'text-[var(--trust-verified)]' },
-    ],
-  },
-};
-
-export function ProfilePage({ userName, onPostClick, onAuthorClick, onAdminAccess }: ProfilePageProps) {
+export function ProfilePage({ userId, onPostClick, onAuthorClick, onAdminAccess }: ProfilePageProps) {
   const { t, i18n } = useTranslation();
   const currentUser = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const language = i18n.language === 'zh' ? 'zh' : 'en';
-  const isSelfView = !userName || userName === currentUser?.displayName;
+  const isSelfView = !userId;
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -141,9 +41,6 @@ export function ProfilePage({ userName, onPostClick, onAuthorClick, onAdminAcces
   const [activeTab, setActiveTab] = useState<'posts' | 'replies'>('posts');
 
   const displayUser = useMemo(() => {
-    if (!isSelfView && userName && mockUsers[userName]) {
-      return mockUsers[userName];
-    }
     const displayName = profile?.display_name || currentUser?.displayName || t('profile.anonymous');
     const initials = displayName
       .split(' ')
@@ -168,7 +65,7 @@ export function ProfilePage({ userName, onPostClick, onAuthorClick, onAdminAcces
       commentsCount: myReplies.length,
       badges: [],
     };
-  }, [currentUser?.displayName, isSelfView, myPosts.length, myReplies.length, profile, t, userName]);
+  }, [currentUser?.displayName, isSelfView, myPosts.length, myReplies.length, profile, t]);
   const user = displayUser;
 
   const mapPostResponse = (item: PostResponse): Post => {
@@ -186,6 +83,7 @@ export function ProfilePage({ userName, onPostClick, onAuthorClick, onAdminAcces
       notHelpfulCount: 0,
       tags: item.tags,
       author: {
+        id: item.author_id,
         name: displayName,
         verified: false,
         credibilityScore: 70,
@@ -198,30 +96,43 @@ export function ProfilePage({ userName, onPostClick, onAuthorClick, onAdminAcces
     };
   };
 
-  const userPosts = isSelfView ? myPosts : [];
+  const userPosts = myPosts;
 
   useEffect(() => {
-    if (!isSelfView) return;
-    getMyProfile()
-      .then((data) => {
-        setProfile(data);
-        setProfileForm({
-          display_name: data.display_name ?? '',
-          location: data.location ?? '',
-          bio: data.bio ?? '',
-        });
-      })
-      .catch((err) => setProfileError(err instanceof Error ? err.message : 'Failed to load profile'));
-    listMyPosts({ language, limit: 20, offset: 0 })
-      .then((items) => setMyPosts(items.map(mapPostResponse)))
-      .catch(() => setMyPosts([]));
-    listMyReplies({ limit: 20, offset: 0 })
-      .then((items) => setMyReplies(items))
-      .catch(() => setMyReplies([]));
-    listMyReports(20, 0)
-      .then((items) => setMyReports(items))
-      .catch(() => setMyReports([]));
-  }, [isSelfView, language]);
+    setProfileError(null);
+    if (isSelfView) {
+      getMyProfile()
+        .then((data) => {
+          setProfile(data);
+          setProfileForm({
+            display_name: data.display_name ?? '',
+            location: data.location ?? '',
+            bio: data.bio ?? '',
+          });
+        })
+        .catch((err) => setProfileError(err instanceof Error ? err.message : 'Failed to load profile'));
+      listMyPosts({ language, limit: 20, offset: 0 })
+        .then((items) => setMyPosts(items.map(mapPostResponse)))
+        .catch(() => setMyPosts([]));
+      listMyReplies({ limit: 20, offset: 0 })
+        .then((items) => setMyReplies(items))
+        .catch(() => setMyReplies([]));
+      listMyReports(20, 0)
+        .then((items) => setMyReports(items))
+        .catch(() => setMyReports([]));
+    } else if (userId) {
+      getProfileById(userId)
+        .then((data) => {
+          setProfile(data);
+        })
+        .catch((err) => setProfileError(err instanceof Error ? err.message : 'Failed to load profile'));
+      listPosts({ language, limit: 20, offset: 0, authorId: userId })
+        .then((items) => setMyPosts(items.map(mapPostResponse)))
+        .catch(() => setMyPosts([]));
+      setMyReplies([]);
+      setMyReports([]);
+    }
+  }, [isSelfView, language, userId]);
 
   const handleProfileSave = async () => {
     const updated = await updateMyProfile({
@@ -230,6 +141,13 @@ export function ProfilePage({ userName, onPostClick, onAuthorClick, onAdminAcces
       bio: profileForm.bio.trim() || null,
     });
     setProfile(updated);
+    if (currentUser?.email) {
+      setUser({
+        email: currentUser.email,
+        displayName: updated.display_name || currentUser.displayName,
+        languagePreference: currentUser.languagePreference,
+      });
+    }
     setIsEditing(false);
   };
 

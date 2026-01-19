@@ -31,6 +31,26 @@ async def get_my_profile(
     )
 
 
+@router.get("/{user_id}", response_model=ProfileResponse)
+async def get_profile_by_id(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    profile = await get_profile(db, user_id)
+    return ProfileResponse(
+        user_id=profile.user_id,
+        display_name=profile.display_name,
+        avatar_url=profile.avatar_url,
+        school_level=profile.school_level,
+        location=profile.location,
+        bio=profile.bio,
+        language_preference=profile.language_preference,
+        credibility_score=profile.credibility_score,
+        helpfulness_score=profile.helpfulness_score,
+        accuracy_score=profile.accuracy_score,
+    )
+
+
 @router.patch("/me", response_model=ProfileResponse)
 async def update_my_profile(
     payload: ProfileUpdateRequest,

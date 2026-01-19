@@ -116,8 +116,13 @@ async def delete_post(db: AsyncSession, post_id: str, author_id: str, is_admin: 
     await db.commit()
 
 
-async def list_posts(db: AsyncSession, language: str, limit: int, offset: int) -> list[dict]:
-    result = await db.execute(select(Post).order_by(Post.created_at.desc()).limit(limit).offset(offset))
+async def list_posts(
+    db: AsyncSession, language: str, limit: int, offset: int, author_id: str | None = None
+) -> list[dict]:
+    stmt = select(Post)
+    if author_id:
+        stmt = stmt.where(Post.author_id == author_id)
+    result = await db.execute(stmt.order_by(Post.created_at.desc()).limit(limit).offset(offset))
     posts = result.scalars().all()
     return [await _to_response(db, post, language) for post in posts]
 
