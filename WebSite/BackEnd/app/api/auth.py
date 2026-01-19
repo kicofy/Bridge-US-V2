@@ -60,10 +60,7 @@ async def logout(payload: LogoutRequest, db: AsyncSession = Depends(get_db)):
 @router.post("/send-code", response_model=SendEmailCodeResponse)
 async def send_code(payload: SendEmailCodeRequest, db: AsyncSession = Depends(get_db)):
     code = await send_email_code(db, payload.email, payload.purpose)
-    response = SendEmailCodeResponse(status="ok")
-    if settings.environment == "local" and settings.email_debug_return_code:
-        response.code = code
-    return response
+    return SendEmailCodeResponse(status="ok")
 
 
 @router.post("/reset-password")

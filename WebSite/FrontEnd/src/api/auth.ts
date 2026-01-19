@@ -55,3 +55,10 @@ export async function forgotPassword(payload: {
   });
 }
 
+export async function resetPassword(payload: { current_password: string; new_password: string }) {
+  return apiFetch<{ status: string }>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+

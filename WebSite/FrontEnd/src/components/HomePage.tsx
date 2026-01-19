@@ -4,8 +4,11 @@ import { PostCard, Post } from './PostCard';
 import { MobileCategorySelector } from './MobileCategorySelector';
 import { Loader2 } from 'lucide-react';
 import { listPosts, PostResponse } from '../api/posts';
+import { updateMyProfile } from '../api/profile';
 import { ApiError } from '../api/client';
 import { useTranslation } from 'react-i18next';
+import { setLanguage } from '../i18n';
+import { useAuthStore } from '../store/auth';
 
 interface HomePageProps {
   selectedCategory: string;
@@ -24,6 +27,7 @@ const FALLBACK_AUTHOR = {
 
 export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAuthorClick, language = 'en' }: HomePageProps) {
   const { t } = useTranslation();
+  const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken));
   const [selectedFilter, setSelectedFilter] = useState('newest');
   const [displayedPosts, setDisplayedPosts] = useState<Post[]>([]);
   const [page, setPage] = useState(1);
@@ -31,6 +35,7 @@ export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAu
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
+  const [languageUpdating, setLanguageUpdating] = useState(false);
 
   // All available posts loaded from backend
   const [allPosts, setAllPosts] = useState<Post[]>([]);
@@ -171,13 +176,40 @@ export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAu
         </div>
       )}
 
-      <div className="mb-4 sm:mb-6">
-        <h1 className="mb-2 text-2xl sm:text-3xl">
-          {selectedCategory === 'all' ? t('routes:home.title') : t('routes:home.title')}
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          {t('routes:home.subtitle')}
-        </p>
+      <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="mb-2 text-2xl sm:text-3xl">
+            {selectedCategory === 'all' ? t('routes:home.title') : t('routes:home.title')}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            {t('routes:home.subtitle')}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">{t('settings.language')}</span>
+          <select
+            value={language}
+            onChange={async (e) => {
+              const next = e.target.value === 'zh' ? 'zh' : 'en';
+              setLanguage(next);
+              if (isAuthenticated) {
+                setLanguageUpdating(true);
+                try {
+                  await updateMyProfile({ language_preference: next });
+                } catch {
+                  // Ignore update errors for now
+                } finally {
+                  setLanguageUpdating(false);
+                }
+              }
+            }}
+            className="h-9 rounded-xl border bg-white px-3 text-sm"
+            disabled={languageUpdating}
+          >
+            <option value="en">{t('settings.languageEnglish')}</option>
+            <option value="zh">{t('settings.languageChinese')}</option>
+          </select>
+        </div>
       </div>
 
       <FilterBar selectedFilter={selectedFilter} onFilterChange={setSelectedFilter} />

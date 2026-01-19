@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Bold, Italic, Link, Image, List, ListOrdered, Heading2 } from 'lucide-react';
 import { Button } from './ui/button';
+import { uploadImage } from '../api/files';
 
 interface RichTextEditorProps {
   value: string;
@@ -13,6 +14,9 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   const [showImageInput, setShowImageInput] = useState(false);
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [linkUrl, setLinkUrl] = useState('');
   const [linkText, setLinkText] = useState('');
 
@@ -64,6 +68,22 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
     insertMarkdown(`\n![Image](${imageUrl})\n`, '', '');
     setImageUrl('');
     setShowImageInput(false);
+  };
+
+  const handleImageUpload = async () => {
+    if (!imageFile) return;
+    setImageUploading(true);
+    setImageError(null);
+    try {
+      const uploaded = await uploadImage(imageFile);
+      insertMarkdown(`\n![Image](${uploaded.url})\n`, '', '');
+      setImageFile(null);
+      setShowImageInput(false);
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setImageUploading(false);
+    }
   };
 
   const handleLinkInsert = () => {
@@ -155,39 +175,66 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
 
       {/* Image URL input */}
       {showImageInput && (
-        <div className="flex gap-2 rounded-xl border bg-muted/30 p-3">
-          <input
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="Enter image URL..."
-            className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--bridge-blue)]"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleImageInsert();
-              }
-            }}
-          />
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleImageInsert}
-            className="rounded-lg bg-[var(--bridge-blue)] hover:bg-[var(--bridge-blue)]/90"
-          >
-            Insert
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              setShowImageInput(false);
-              setImageUrl('');
-            }}
-          >
-            Cancel
-          </Button>
+        <div className="space-y-2 rounded-xl border bg-muted/30 p-3">
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="Enter image URL..."
+              className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--bridge-blue)]"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleImageInsert();
+                }
+              }}
+            />
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleImageInsert}
+              className="rounded-lg bg-[var(--bridge-blue)] hover:bg-[var(--bridge-blue)]/90"
+              disabled={!imageUrl.trim()}
+            >
+              Insert
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                setImageFile(file);
+                setImageError(null);
+              }}
+              className="text-sm"
+            />
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleImageUpload}
+              className="rounded-lg bg-[var(--bridge-blue)] hover:bg-[var(--bridge-blue)]/90"
+              disabled={!imageFile || imageUploading}
+            >
+              {imageUploading ? 'Uploading...' : 'Upload & Insert'}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setShowImageInput(false);
+                setImageUrl('');
+                setImageFile(null);
+                setImageError(null);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+          {imageError && <p className="text-xs text-red-600">{imageError}</p>}
         </div>
       )}
 

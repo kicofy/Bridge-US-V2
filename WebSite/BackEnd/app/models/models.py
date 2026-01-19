@@ -81,6 +81,7 @@ class Profile(Base):
     school_level = Column(String(32), nullable=True)
     location = Column(String(100), nullable=True)
     bio = Column(Text, nullable=True)
+    language_preference = Column(String(8), default="en", nullable=False)
     credibility_score = Column(Integer, default=0, nullable=False)
     helpfulness_score = Column(Integer, default=0, nullable=False)
     accuracy_score = Column(Integer, default=0, nullable=False)

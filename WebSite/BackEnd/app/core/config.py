@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     moderation_review_threshold: int = 60
     moderation_reject_threshold: int = 85
     email_code_expire_minutes: int = 10
-    email_debug_return_code: bool = True
+    email_debug_return_code: bool = False
     smtp_host: str | None = None
     smtp_port: int = 587
     smtp_user: str | None = None
@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     root_account: str | None = Field(default=None, validation_alias=AliasChoices("ROOT_ACCOUNT", "Root_Account"))
     root_password: str | None = Field(default=None, validation_alias=AliasChoices("ROOT_PASSWORD", "Root_Password"))
     ai_daily_limit: int = 0
+    uploads_dir: str = "uploads"
+    uploads_url: str = "/uploads"
+    upload_max_mb: int = 5
+    upload_allowed_types: str = "image/jpeg,image/png,image/webp,image/gif"
 
 
 settings = Settings()

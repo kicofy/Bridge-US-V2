@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import smtplib
 import ssl
 from email.message import EmailMessage
@@ -9,6 +10,7 @@ import anyio
 from app.core.config import settings
 from app.core.errors import AppError
 
+logger = logging.getLogger(__name__)
 
 def _resolve_smtp_settings() -> tuple[str | None, int, str | None, str | None, bool, bool, str | None]:
     host = settings.smtp_host or settings.email_smtp_host or settings.email_host
@@ -36,38 +38,57 @@ def _resolve_smtp_settings() -> tuple[str | None, int, str | None, str | None, b
     return host, port, user, password, use_tls, use_ssl, sender
 
 
-def _build_message(to_email: str, subject: str, content: str) -> EmailMessage:
+def _build_message(to_email: str, subject: str, content: str, html: str | None = None) -> EmailMessage:
     msg = EmailMessage()
     msg["Subject"] = subject
     _, _, user, _, _, _, sender = _resolve_smtp_settings()
     msg["From"] = sender or user or "no-reply@bridge-us.org"
     msg["To"] = to_email
     msg.set_content(content)
+    if html:
+        msg.add_alternative(html, subtype="html")
     return msg
 
 
-def _send_email_sync(to_email: str, subject: str, content: str) -> None:
+def _send_email_sync(to_email: str, subject: str, content: str, html: str | None = None) -> None:
     host, port, user, password, use_tls, use_ssl, _ = _resolve_smtp_settings()
     if not host:
         raise AppError(code="email_not_configured", message="Email not configured", status_code=500)
-    msg = _build_message(to_email, subject, content)
+    msg = _build_message(to_email, subject, content, html)
+    masked_password = "set" if password else "empty"
+    logger.info(
+        "Email send start: host=%s port=%s user=%s tls=%s ssl=%s from=%s to=%s password=%s",
+        host,
+        port,
+        user,
+        use_tls,
+        use_ssl,
+        msg["From"],
+        to_email,
+        masked_password,
+    )
 
-    if use_ssl:
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(host, port, context=context) as server:
-            if user and password:
-                server.login(user, password)
-            server.send_message(msg)
-    else:
-        with smtplib.SMTP(host, port) as server:
-            if use_tls:
-                context = ssl.create_default_context()
-                server.starttls(context=context)
-            if user and password:
-                server.login(user, password)
-            server.send_message(msg)
+    try:
+        if use_ssl:
+            context = ssl.create_default_context()
+            with smtplib.SMTP_SSL(host, port, context=context) as server:
+                if user and password:
+                    server.login(user, password)
+                server.send_message(msg)
+        else:
+            with smtplib.SMTP(host, port) as server:
+                if use_tls:
+                    context = ssl.create_default_context()
+                    server.starttls(context=context)
+                if user and password:
+                    server.login(user, password)
+                server.send_message(msg)
+        logger.info("Email send success to=%s subject=%s", to_email, subject)
+    except Exception:
+        logger.exception("Email send failed to=%s subject=%s", to_email, subject)
+        raise
 
 
-async def send_email(to_email: str, subject: str, content: str) -> None:
-    await anyio.to_thread.run_sync(_send_email_sync, to_email, subject, content)
+async def send_email(to_email: str, subject: str, content: str, html: str | None = None) -> None:
+    await anyio.to_thread.run_sync(_send_email_sync, to_email, subject, content, html)
 

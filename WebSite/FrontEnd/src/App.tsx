@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AuthPage } from './components/AuthPage';
 import { Navigation } from './components/Navigation';
@@ -19,6 +19,7 @@ import { Notification } from './components/NotificationDropdown';
 import { mockPosts } from './lib/mockData';
 import { ApiError } from './api/client';
 import { getPost, PostResponse } from './api/posts';
+import { getMyProfile, updateMyProfile } from './api/profile';
 import { useAuthStore } from './store/auth';
 import { setLanguage } from './i18n';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +42,8 @@ function AppShell() {
   const location = useLocation();
   const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken));
   const currentUser = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+  const profileLoadedRef = useRef(false);
 
   const currentPage = useMemo(() => {
     const path = location.pathname;
@@ -83,7 +86,36 @@ function AppShell() {
   const handleLanguageToggle = () => {
     const next = language === 'en' ? 'zh' : 'en';
     setLanguage(next);
+    if (isAuthenticated) {
+      updateMyProfile({ language_preference: next }).catch(() => {
+        // Ignore update errors for now
+      });
+    }
   };
+
+  useEffect(() => {
+    if (!isAuthenticated || profileLoadedRef.current) {
+      return;
+    }
+    profileLoadedRef.current = true;
+    getMyProfile()
+      .then((profile) => {
+        if (profile.language_preference === 'en' || profile.language_preference === 'zh') {
+          setLanguage(profile.language_preference);
+        }
+        if (currentUser?.email) {
+          const displayName = profile.display_name || currentUser.displayName;
+          setUser({
+            email: currentUser.email,
+            displayName: displayName,
+            languagePreference: profile.language_preference,
+          });
+        }
+      })
+      .catch(() => {
+        profileLoadedRef.current = false;
+      });
+  }, [isAuthenticated, currentUser?.email, currentUser?.displayName, setUser]);
 
   const handlePostClick = (post: Post) => {
     setSelectedPost(post);
@@ -109,6 +141,7 @@ function AppShell() {
       notifications: '/notifications',
       'create-post': '/posts/new',
       'admin-secret-access': '/admin',
+      settings: '/settings',
       login: '/login',
     };
     const target = pageRoutes[page] ?? '/';

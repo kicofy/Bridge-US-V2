@@ -3,10 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Button } from './ui/button';
 import { NotificationDropdown, Notification } from './NotificationDropdown';
 import { use3DHover } from '../hooks/use3DHover';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useAuthStore } from '../store/auth';
 import { logoutUser } from '../api/auth';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 interface NavigationProps {
   currentPage: string;
@@ -18,7 +17,8 @@ interface NavigationProps {
 export function Navigation({ currentPage, onNavigate, language, onLanguageToggle }: NavigationProps) {
   const { t, i18n } = useTranslation();
   const { refreshToken, clear, accessToken } = useAuthStore();
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileCloseTimer = useRef<number | null>(null);
   const logo3D = use3DHover({ maxRotation: 8, scale: 1.05 });
   const homeBtn3D = use3DHover({ maxRotation: 6, scale: 1.03 });
   const searchBtn3D = use3DHover({ maxRotation: 6, scale: 1.03 });
@@ -53,6 +53,18 @@ export function Navigation({ currentPage, onNavigate, language, onLanguageToggle
       clear();
       onNavigate('login');
     }
+  };
+
+  const clearProfileCloseTimer = () => {
+    if (profileCloseTimer.current !== null) {
+      window.clearTimeout(profileCloseTimer.current);
+      profileCloseTimer.current = null;
+    }
+  };
+
+  const scheduleProfileClose = () => {
+    clearProfileCloseTimer();
+    profileCloseTimer.current = window.setTimeout(() => setProfileMenuOpen(false), 200);
   };
 
   return (
@@ -124,38 +136,56 @@ export function Navigation({ currentPage, onNavigate, language, onLanguageToggle
             </button>
             {isAuthenticated ? (
               <div
-                onMouseEnter={() => setProfileOpen(true)}
-                onMouseLeave={() => setProfileOpen(false)}
+                className="relative"
+                onMouseEnter={() => {
+                  clearProfileCloseTimer();
+                  setProfileMenuOpen(true);
+                }}
+                onMouseLeave={scheduleProfileClose}
               >
-                <DropdownMenu open={profileOpen} onOpenChange={setProfileOpen}>
-                  <DropdownMenuTrigger asChild>
+                <button
+                  ref={profileBtn3D.ref}
+                  style={profileBtn3D.style}
+                  onMouseMove={profileBtn3D.onMouseMove}
+                  onMouseEnter={profileBtn3D.onMouseEnter}
+                  onMouseLeave={profileBtn3D.onMouseLeave}
+                  onClick={() => onNavigate('profile')}
+                  className={`px-4 py-2 rounded-xl transition-all ${
+                    currentPage === 'profile'
+                      ? 'bg-[var(--bridge-blue)] text-white font-medium'
+                      : 'text-foreground hover:bg-secondary border'
+                  }`}
+                >
+                  {t('nav.profile')}
+                </button>
+                {profileMenuOpen && (
+                  <div
+                    className="absolute right-0 mt-2 w-44 rounded-xl border bg-white shadow-lg z-50"
+                    onMouseEnter={clearProfileCloseTimer}
+                    onMouseLeave={scheduleProfileClose}
+                  >
                     <button
-                      ref={profileBtn3D.ref}
-                      style={profileBtn3D.style}
-                      onMouseMove={profileBtn3D.onMouseMove}
-                      onMouseEnter={profileBtn3D.onMouseEnter}
-                      onMouseLeave={profileBtn3D.onMouseLeave}
-                      onClick={() => onNavigate('profile')}
-                      className={`px-4 py-2 rounded-xl transition-all ${
-                        currentPage === 'profile'
-                          ? 'bg-[var(--bridge-blue)] text-white font-medium'
-                          : 'text-foreground hover:bg-secondary border'
-                      }`}
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        onNavigate('settings');
+                      }}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted whitespace-nowrap"
                     >
-                      {t('nav.profile')}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="rounded-xl">
-                    <DropdownMenuItem onClick={() => onNavigate('settings')}>
-                      <Settings className="mr-2 h-4 w-4" />
+                      <Settings className="h-4 w-4" />
                       {t('actions.settings')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 whitespace-nowrap"
+                    >
+                      <LogOut className="h-4 w-4" />
                       {t('actions.logout')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <button

@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 export type AuthUser = {
   email: string;
   displayName?: string;
+  languagePreference?: 'en' | 'zh';
 };
 
 type AuthState = {

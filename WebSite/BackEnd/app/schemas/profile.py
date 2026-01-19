@@ -8,6 +8,7 @@ class ProfileResponse(BaseModel):
     school_level: str | None = None
     location: str | None = None
     bio: str | None = None
+    language_preference: str = "en"
     credibility_score: int = 0
     helpfulness_score: int = 0
     accuracy_score: int = 0
@@ -19,4 +20,5 @@ class ProfileUpdateRequest(BaseModel):
     school_level: str | None = None
     location: str | None = None
     bio: str | None = None
+    language_preference: str | None = Field(default=None, pattern="^(en|zh)$")
 

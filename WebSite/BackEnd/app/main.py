@@ -1,5 +1,8 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.auth import router as auth_router
@@ -17,6 +20,7 @@ from app.api.search import router as search_router
 from app.api.tags import router as tags_router
 from app.api.verification import router as verification_router
 from app.api.admin import router as admin_router
+from app.api.files import router as files_router
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.errors import AppError, app_error_handler, http_exception_handler
@@ -45,6 +49,7 @@ def create_app() -> FastAPI:
 
     @app.on_event("startup")
     async def _ensure_root_admin() -> None:
+        os.makedirs(settings.uploads_dir, exist_ok=True)
         async with SessionLocal() as session:
             await ensure_root_admin(session)
             await ensure_default_categories(session)
@@ -64,6 +69,8 @@ def create_app() -> FastAPI:
     app.include_router(admin_router, prefix=settings.api_prefix)
     app.include_router(ai_router, prefix=settings.api_prefix)
     app.include_router(notifications_router, prefix=settings.api_prefix)
+    app.include_router(files_router, prefix=settings.api_prefix)
+    app.mount(settings.uploads_url, StaticFiles(directory=settings.uploads_dir), name="uploads")
     return app
 
 

@@ -5,10 +5,11 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { sendEmailCode, registerUser, loginUser, forgotPassword } from '../api/auth';
-import { getMyProfile } from '../api/profile';
+import { getMyProfile, updateMyProfile } from '../api/profile';
 import { ApiError } from '../api/client';
 import { useAuthStore } from '../store/auth';
 import { useTranslation } from 'react-i18next';
+import { setLanguage } from '../i18n';
 
 interface AuthPageProps {
   initialView?: AuthView;
@@ -17,7 +18,8 @@ interface AuthPageProps {
 type AuthView = 'login' | 'register' | 'forgot-password' | 'verify-email' | 'reset-password';
 
 export function AuthPage({ initialView = 'login' }: AuthPageProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const preferredLanguage = i18n.language === 'zh' ? 'zh' : 'en';
   const navigate = useNavigate();
   const { setTokens, setUser } = useAuthStore();
   const [currentView, setCurrentView] = useState<AuthView>(initialView);
@@ -61,9 +63,8 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
         currentView === 'register' || currentView === 'verify-email'
           ? 'register'
           : 'reset';
-      const response = await sendEmailCode(email, purpose);
-      const debugCode = response.code ? ` (Code: ${response.code})` : '';
-      setSuccess(t('auth.codeSent', { email }) + debugCode);
+      await sendEmailCode(email, purpose);
+      setSuccess(t('auth.codeSent', { email }));
 
       if (currentView === 'register') {
         setCurrentView('verify-email');
@@ -116,7 +117,12 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
         code: verificationCode,
       });
       setTokens(tokens.access_token, tokens.refresh_token);
-      setUser({ email, displayName: username });
+      setUser({ email, displayName: username, languagePreference: preferredLanguage });
+      try {
+        await updateMyProfile({ language_preference: preferredLanguage });
+      } catch {
+        // Ignore preference update failure on first login
+      }
       setSuccess(t('auth.emailVerified'));
       setTimeout(() => {
         navigate('/');
@@ -143,13 +149,18 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
       const tokens = await loginUser({ email, password });
       setTokens(tokens.access_token, tokens.refresh_token);
       let displayName = email.split('@')[0];
+      let languagePreference: 'en' | 'zh' | undefined = undefined;
       try {
         const profile = await getMyProfile();
         displayName = profile.display_name || displayName;
+        if (profile.language_preference === 'en' || profile.language_preference === 'zh') {
+          languagePreference = profile.language_preference;
+          setLanguage(languagePreference);
+        }
       } catch {
         // Fallback to email prefix if profile fetch fails
       }
-      setUser({ email, displayName });
+      setUser({ email, displayName, languagePreference });
       setSuccess(t('auth.loginSuccess'));
       setTimeout(() => {
         navigate('/');

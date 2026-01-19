@@ -7,6 +7,7 @@ export type ProfileResponse = {
   school_level?: string | null;
   location?: string | null;
   bio?: string | null;
+  language_preference?: 'en' | 'zh';
   credibility_score: number;
   helpfulness_score: number;
   accuracy_score: number;
@@ -24,6 +25,7 @@ export async function updateMyProfile(payload: {
   school_level?: string | null;
   location?: string | null;
   bio?: string | null;
+  language_preference?: 'en' | 'zh';
 }) {
   return apiFetch<ProfileResponse>('/profiles/me', {
     method: 'PATCH',
