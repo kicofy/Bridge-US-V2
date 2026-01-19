@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_admin_user, get_root_admin_user
+from app.core.config import settings
 from app.core.database import get_db
 from app.models.models import User
 from app.schemas.audit import AuditLogResponse
@@ -33,6 +34,14 @@ async def users(
         {"id": user.id, "email": user.email, "role": user.role, "status": user.status}
         for user in items
     ]
+
+
+@router.get("/me")
+async def admin_me(
+    user: User = Depends(get_admin_user),
+):
+    is_root = bool(settings.root_account and user.email == settings.root_account)
+    return {"id": user.id, "email": user.email, "role": user.role, "is_root": is_root}
 
 
 @router.get("/stats", response_model=AdminStatsResponse)

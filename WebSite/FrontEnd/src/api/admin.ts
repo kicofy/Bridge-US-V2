@@ -7,12 +7,23 @@ export type AdminUser = {
   status: string;
 };
 
+export type AdminMe = {
+  id: string;
+  email: string;
+  role: string;
+  is_root: boolean;
+};
+
 export async function listAdminUsers(limit = 20, offset = 0) {
   const query = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
   });
   return apiFetch<AdminUser[]>(`/admin/users?${query.toString()}`, { method: 'GET' });
+}
+
+export async function getAdminMe() {
+  return apiFetch<AdminMe>('/admin/me', { method: 'GET' });
 }
 
 export async function banUser(userId: string) {

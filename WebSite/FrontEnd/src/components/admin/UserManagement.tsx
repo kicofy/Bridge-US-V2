@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search, Filter, Ban, Eye, Shield } from 'lucide-react';
 import { Button } from '../ui/button';
-import { AdminUser, banUser, listAdminUsers, makeAdmin, unbanUser } from '../../api/admin';
-import { useAuthStore } from '../../store/auth';
+import { AdminMe, AdminUser, banUser, getAdminMe, listAdminUsers, makeAdmin, unbanUser } from '../../api/admin';
 
 export function UserManagement() {
-  const currentUser = useAuthStore((state) => state.user);
+  const [adminInfo, setAdminInfo] = useState<AdminMe | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'banned'>('all');
@@ -16,8 +15,11 @@ export function UserManagement() {
 
   useEffect(() => {
     setLoading(true);
-    listAdminUsers(50, 0)
-      .then((items) => setUsers(items))
+    Promise.all([listAdminUsers(50, 0), getAdminMe()])
+      .then(([items, me]) => {
+        setUsers(items);
+        setAdminInfo(me);
+      })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load users'))
       .finally(() => setLoading(false));
   }, []);
@@ -40,7 +42,7 @@ export function UserManagement() {
     }
   };
 
-  const canPromote = currentUser?.role === 'admin' && currentUser?.isRoot;
+  const canPromote = adminInfo?.role === 'admin' && adminInfo?.is_root;
 
   const handleMakeAdmin = async (user: AdminUser) => {
     if (!canPromote || user.role === 'admin') {
@@ -175,7 +177,7 @@ export function UserManagement() {
                       >
                         <Ban className={`h-4 w-4 ${user.status === 'banned' ? 'text-red-600' : ''}`} />
                       </Button>
-                      {canPromote && user.role !== 'admin' && user.id !== currentUser?.userId && (
+                      {canPromote && user.role !== 'admin' && user.id !== adminInfo?.id && (
                         <Button
                           variant="ghost"
                           size="sm"
