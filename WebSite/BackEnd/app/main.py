@@ -47,9 +47,10 @@ def create_app() -> FastAPI:
     app.add_exception_handler(AppError, app_error_handler)
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 
+    os.makedirs(settings.uploads_dir, exist_ok=True)
+
     @app.on_event("startup")
     async def _ensure_root_admin() -> None:
-        os.makedirs(settings.uploads_dir, exist_ok=True)
         async with SessionLocal() as session:
             await ensure_root_admin(session)
             await ensure_default_categories(session)
