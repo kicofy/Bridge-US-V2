@@ -137,7 +137,6 @@ async def send_email_code(db: AsyncSession, email: str, purpose: str) -> str:
             "If you did not request this code, please ignore this email.\n"
             "Need help? Contact support at support@bridge-us.org\n"
         )
-        logo_url = "https://bridge-us.org/Logo.png"
         html = f"""
 <!doctype html>
 <html>
@@ -145,7 +144,6 @@ async def send_email_code(db: AsyncSession, email: str, purpose: str) -> str:
     <div style="max-width:640px;margin:0 auto;padding:32px;">
       <div style="background:#ffffff;border:1px solid #e6eef5;border-radius:20px;padding:28px;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-          <img src="{logo_url}" alt="BridgeUS" width="44" height="44" style="border-radius:12px;display:block;" />
           <div>
             <div style="font-size:18px;font-weight:700;color:#2b3a4a;">BridgeUS</div>
             <div style="font-size:12px;color:#8a96a3;">Verification Code</div>
