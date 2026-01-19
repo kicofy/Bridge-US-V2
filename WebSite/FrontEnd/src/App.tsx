@@ -327,7 +327,6 @@ function PostDetailRoute({ selectedPost, onBack, onAuthorClick, language }: {
     }
     if (selectedPost) {
       setPost(selectedPost);
-      return;
     }
     requestPost(language).catch((err) => {
       const message = err instanceof ApiError ? err.message : 'Failed to load post';
