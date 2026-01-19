@@ -61,27 +61,7 @@ function AppShell() {
     return 'home';
   }, [location.pathname]);
 
-  const backgroundClass = useMemo(() => {
-    if (currentPage === 'auth') return '';
-    switch (currentPage) {
-      case 'search':
-        return 'grid-wave-bg';
-      case 'ai-qa':
-        return 'stars-bg';
-      case 'profile':
-      case 'notifications':
-        return 'orbs-bg';
-      case 'admin':
-      case 'settings':
-        return 'noise-bg';
-      case 'create-post':
-      case 'post-detail':
-        return 'aurora-bg';
-      case 'home':
-      default:
-        return 'aurora-bg';
-    }
-  }, [currentPage]);
+  const backgroundClass = useMemo(() => 'aurora-bg', []);
 
   const handleLanguageToggle = () => {
     const next = language === 'en' ? 'zh' : 'en';

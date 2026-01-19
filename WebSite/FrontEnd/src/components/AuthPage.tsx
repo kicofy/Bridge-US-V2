@@ -698,13 +698,7 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--bridge-blue)]/5 via-[var(--bridge-teal)]/5 to-white flex items-center justify-center p-4">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-[var(--bridge-blue)]/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[var(--bridge-teal)]/10 rounded-full blur-3xl" />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="relative w-full max-w-md">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
