@@ -6,6 +6,10 @@ import ssl
 from email.message import EmailMessage
 
 import anyio
+try:
+    import certifi
+except Exception:  # pragma: no cover - optional dependency
+    certifi = None
 
 from app.core.config import settings
 from app.core.errors import AppError
@@ -50,6 +54,17 @@ def _build_message(to_email: str, subject: str, content: str, html: str | None =
     return msg
 
 
+def _create_ssl_context() -> ssl.SSLContext:
+    context = ssl.create_default_context()
+    if certifi is not None:
+        try:
+            context.load_verify_locations(certifi.where())
+        except Exception:
+            # Fall back to system certs if certifi cannot be loaded
+            pass
+    return context
+
+
 def _send_email_sync(to_email: str, subject: str, content: str, html: str | None = None) -> None:
     host, port, user, password, use_tls, use_ssl, _ = _resolve_smtp_settings()
     if not host:
@@ -70,7 +85,7 @@ def _send_email_sync(to_email: str, subject: str, content: str, html: str | None
 
     try:
         if use_ssl:
-            context = ssl.create_default_context()
+            context = _create_ssl_context()
             with smtplib.SMTP_SSL(host, port, context=context) as server:
                 if user and password:
                     server.login(user, password)
@@ -78,7 +93,7 @@ def _send_email_sync(to_email: str, subject: str, content: str, html: str | None
         else:
             with smtplib.SMTP(host, port) as server:
                 if use_tls:
-                    context = ssl.create_default_context()
+                    context = _create_ssl_context()
                     server.starttls(context=context)
                 if user and password:
                     server.login(user, password)
