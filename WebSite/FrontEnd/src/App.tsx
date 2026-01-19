@@ -132,6 +132,17 @@ function AppShell() {
     }
   };
 
+  useEffect(() => {
+    const path = location.pathname + location.search + location.hash;
+    const isAuthRoute =
+      location.pathname.startsWith('/login') ||
+      location.pathname.startsWith('/register') ||
+      location.pathname.startsWith('/forgot-password');
+    if (!isAuthRoute) {
+      sessionStorage.setItem('lastNonAuthPath', path);
+    }
+  }, [location.pathname, location.search, location.hash]);
+
   const handleNotificationClick = (notification: Notification) => {
     // Handle notification click - could navigate to related content
     console.log('Notification clicked:', notification);

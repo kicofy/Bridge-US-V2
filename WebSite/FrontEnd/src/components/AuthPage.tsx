@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowLeft, CheckCircle, Loader2, Globe } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
@@ -28,6 +28,7 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
+  const [registerLanguage, setRegisterLanguage] = useState<'en' | 'zh'>(preferredLanguage);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -36,7 +37,8 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
     setCurrentView(initialView);
     setError('');
     setSuccess('');
-  }, [initialView]);
+    setRegisterLanguage(preferredLanguage);
+  }, [initialView, preferredLanguage]);
 
   const getErrorMessage = (err: unknown) => {
     if (err instanceof ApiError) {
@@ -117,9 +119,10 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
         code: verificationCode,
       });
       setTokens(tokens.access_token, tokens.refresh_token);
-      setUser({ email, displayName: username, languagePreference: preferredLanguage });
+      setUser({ email, displayName: username, languagePreference: registerLanguage });
       try {
-        await updateMyProfile({ language_preference: preferredLanguage });
+        await updateMyProfile({ language_preference: registerLanguage });
+        setLanguage(registerLanguage);
       } catch {
         // Ignore preference update failure on first login
       }
@@ -221,11 +224,8 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
           variant="ghost"
           size="sm"
           onClick={() => {
-            if (window.history.length > 1) {
-              navigate(-1);
-            } else {
-              navigate('/');
-            }
+            const fallback = sessionStorage.getItem('lastNonAuthPath') || '/';
+            navigate(fallback);
           }}
           className="gap-2 rounded-xl -ml-2"
         >
@@ -344,6 +344,18 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
       </div>
 
       <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="reg-language">{t('settings.language')}</Label>
+          <select
+            id="reg-language"
+            value={registerLanguage}
+            onChange={(e) => setRegisterLanguage(e.target.value === 'zh' ? 'zh' : 'en')}
+            className="h-12 w-full rounded-xl border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--bridge-blue)]"
+          >
+            <option value="en">{t('settings.languageEnglish')}</option>
+            <option value="zh">{t('settings.languageChinese')}</option>
+          </select>
+        </div>
         <div className="space-y-2">
           <Label htmlFor="reg-email">{t('auth.email')}</Label>
           <div className="relative">
@@ -702,13 +714,28 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
       <div className="relative w-full max-w-md">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/80 backdrop-blur-sm border shadow-lg mb-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--bridge-blue)] to-[var(--bridge-teal)] flex items-center justify-center text-white font-bold">
-              B
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-[var(--bridge-blue)] to-[var(--bridge-teal)] bg-clip-text text-transparent">
-              BridgeUS
-            </span>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/80 backdrop-blur-sm border shadow-lg transition-opacity hover:opacity-90"
+            >
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--bridge-blue)] to-[var(--bridge-teal)] flex items-center justify-center text-white font-bold">
+                B
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-[var(--bridge-blue)] to-[var(--bridge-teal)] bg-clip-text text-transparent">
+                BridgeUS
+              </span>
+            </button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLanguage(preferredLanguage === 'en' ? 'zh' : 'en')}
+              className="rounded-xl gap-2"
+            >
+              <Globe className="h-4 w-4" />
+              <span className="text-sm">{preferredLanguage === 'en' ? 'EN' : '中文'}</span>
+            </Button>
           </div>
           <p className="text-sm text-muted-foreground">
             {t('auth.brandSubtitle')}
