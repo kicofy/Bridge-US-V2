@@ -19,6 +19,27 @@ async def list_replies(
     return list(result.scalars().all())
 
 
+async def list_user_replies(db: AsyncSession, user_id: str, limit: int, offset: int) -> list[Reply]:
+    result = await db.execute(
+        select(Reply)
+        .where(Reply.author_id == user_id)
+        .order_by(Reply.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    return list(result.scalars().all())
+
+
+async def list_all_replies(
+    db: AsyncSession, limit: int, offset: int, status: str | None = None
+) -> list[Reply]:
+    stmt = select(Reply)
+    if status and status != "all":
+        stmt = stmt.where(Reply.status == status)
+    result = await db.execute(stmt.order_by(Reply.created_at.desc()).limit(limit).offset(offset))
+    return list(result.scalars().all())
+
+
 async def create_reply(db: AsyncSession, post_id: str, author_id: str, payload: ReplyCreateRequest) -> Reply:
     post_result = await db.execute(select(Post).where(Post.id == post_id))
     post = post_result.scalar_one_or_none()

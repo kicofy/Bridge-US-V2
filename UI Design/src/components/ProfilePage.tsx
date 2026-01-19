@@ -6,12 +6,14 @@ import { Separator } from './ui/separator';
 import { PostCard, Post } from './PostCard';
 import { mockPosts } from '../lib/mockData';
 import { Button } from './ui/button';
+import { use3DHover } from '../hooks/use3DHover';
 
 interface ProfilePageProps {
   userName?: string;
   onPostClick?: (post: Post) => void;
   onAuthorClick?: (authorName: string) => void;
   onAdminAccess?: () => void;
+  onNavigate?: (page: string) => void;
 }
 
 // Mock user database
@@ -114,15 +116,36 @@ const mockUsers: Record<string, any> = {
   },
 };
 
-export function ProfilePage({ userName, onPostClick, onAuthorClick, onAdminAccess }: ProfilePageProps) {
+export function ProfilePage({ userName, onPostClick, onAuthorClick, onAdminAccess, onNavigate }: ProfilePageProps) {
   // Get user data - either the specified user or the default current user
   const user = userName && mockUsers[userName] ? mockUsers[userName] : mockUsers['Sarah Chen'];
+  const isOwnProfile = !userName || userName === 'Sarah Chen'; // Check if viewing own profile
+  
+  const settingsBtn3D = use3DHover({ maxRotation: 6, scale: 1.05 });
 
   // Get user's posts
   const userPosts = mockPosts.filter(post => post.author.name === user.name).slice(0, 3);
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Settings Button - Only show for own profile */}
+      {isOwnProfile && onNavigate && (
+        <div className="flex justify-end">
+          <button
+            ref={settingsBtn3D.ref}
+            style={settingsBtn3D.style}
+            onMouseMove={settingsBtn3D.onMouseMove}
+            onMouseEnter={settingsBtn3D.onMouseEnter}
+            onMouseLeave={settingsBtn3D.onMouseLeave}
+            onClick={() => onNavigate('settings')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl glass hover:bg-white/60 transition-colors"
+          >
+            <Settings className="h-4 w-4" />
+            <span>Settings</span>
+          </button>
+        </div>
+      )}
+      
       {/* Mobile: Profile card at top */}
       <Card className="rounded-2xl border p-4 sm:p-6 shadow-sm lg:hidden">
         {/* Avatar and basic info */}

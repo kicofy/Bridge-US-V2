@@ -1,6 +1,7 @@
 import { Globe } from 'lucide-react';
 import { Button } from './ui/button';
 import { NotificationDropdown, Notification } from './NotificationDropdown';
+import { ProfileDropdown } from './ProfileDropdown';
 import { use3DHover } from '../hooks/use3DHover';
 
 interface NavigationProps {
@@ -8,14 +9,15 @@ interface NavigationProps {
   onNavigate: (page: string) => void;
   language: string;
   onLanguageToggle: () => void;
+  currentUser: { email: string; username: string } | null;
+  onLogout: () => void;
 }
 
-export function Navigation({ currentPage, onNavigate, language, onLanguageToggle }: NavigationProps) {
+export function Navigation({ currentPage, onNavigate, language, onLanguageToggle, currentUser, onLogout }: NavigationProps) {
   const logo3D = use3DHover({ maxRotation: 8, scale: 1.05 });
   const homeBtn3D = use3DHover({ maxRotation: 6, scale: 1.03 });
   const searchBtn3D = use3DHover({ maxRotation: 6, scale: 1.03 });
   const aiBtn3D = use3DHover({ maxRotation: 6, scale: 1.03 });
-  const profileBtn3D = use3DHover({ maxRotation: 6, scale: 1.03 });
   const langBtn3D = use3DHover({ maxRotation: 6, scale: 1.05 });
 
   const handleNotificationClick = (notification: Notification) => {
@@ -98,21 +100,12 @@ export function Navigation({ currentPage, onNavigate, language, onLanguageToggle
             >
               AI Q&A
             </button>
-            <button
-              ref={profileBtn3D.ref}
-              style={profileBtn3D.style}
-              onMouseMove={profileBtn3D.onMouseMove}
-              onMouseEnter={profileBtn3D.onMouseEnter}
-              onMouseLeave={profileBtn3D.onMouseLeave}
-              onClick={() => onNavigate('profile')}
-              className={`px-4 py-2 rounded-xl transition-all ${
-                currentPage === 'profile' 
-                  ? 'bg-[var(--bridge-blue)] text-white font-medium' 
-                  : 'text-foreground hover:bg-secondary border'
-              }`}
-            >
-              Profile
-            </button>
+            <ProfileDropdown
+              userName={currentUser?.username || 'User'}
+              isActive={currentPage === 'profile'}
+              onNavigate={onNavigate}
+              onLogout={onLogout}
+            />
           </div>
 
           {/* Right side actions */}

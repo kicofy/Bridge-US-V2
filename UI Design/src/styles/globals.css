@@ -231,6 +231,7 @@ html {
     overflow: hidden;
   }
   
+  /* 主渐变层 - 大型流动光晕 */
   .aurora-bg::before {
     content: '';
     position: absolute;
@@ -238,34 +239,100 @@ html {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle at 20% 50%, rgba(74, 144, 164, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(95, 183, 138, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(74, 144, 164, 0.1) 0%, transparent 50%);
-    animation: aurora 20s ease-in-out infinite;
+    background: 
+      radial-gradient(ellipse at 20% 30%, rgba(74, 144, 164, 0.18) 0%, transparent 45%),
+      radial-gradient(ellipse at 80% 70%, rgba(95, 183, 138, 0.16) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 90%, rgba(74, 144, 164, 0.12) 0%, transparent 40%);
+    animation: aurora-float 25s ease-in-out infinite;
     z-index: 0;
   }
   
-  @keyframes aurora {
+  /* 次渐变层 - 中型对流光晕 */
+  .aurora-bg::after {
+    content: '';
+    position: absolute;
+    top: -30%;
+    left: -30%;
+    width: 160%;
+    height: 160%;
+    background: 
+      radial-gradient(circle at 70% 20%, rgba(95, 183, 138, 0.14) 0%, transparent 35%),
+      radial-gradient(circle at 30% 60%, rgba(74, 144, 164, 0.15) 0%, transparent 40%),
+      radial-gradient(circle at 60% 80%, rgba(244, 164, 96, 0.08) 0%, transparent 30%);
+    animation: aurora-drift 30s ease-in-out infinite reverse;
+    z-index: 0;
+  }
+  
+  /* 主动画 - 柔和浮动 */
+  @keyframes aurora-float {
     0%, 100% {
-      transform: translate(0, 0) rotate(0deg);
+      transform: translate(0, 0) rotate(0deg) scale(1);
+      opacity: 0.85;
+    }
+    20% {
+      transform: translate(8%, 5%) rotate(60deg) scale(1.05);
+      opacity: 1;
+    }
+    40% {
+      transform: translate(-3%, 12%) rotate(120deg) scale(0.98);
+      opacity: 0.9;
+    }
+    60% {
+      transform: translate(-8%, -5%) rotate(200deg) scale(1.03);
+      opacity: 0.95;
+    }
+    80% {
+      transform: translate(5%, -8%) rotate(280deg) scale(1.02);
+      opacity: 1;
+    }
+  }
+  
+  /* 次动画 - 反向漂移 */
+  @keyframes aurora-drift {
+    0%, 100% {
+      transform: translate(0, 0) rotate(0deg) scale(1);
       opacity: 0.8;
     }
     25% {
-      transform: translate(10%, 10%) rotate(90deg);
-      opacity: 1;
+      transform: translate(-6%, 8%) rotate(-45deg) scale(1.08);
+      opacity: 0.95;
     }
     50% {
-      transform: translate(-5%, 20%) rotate(180deg);
-      opacity: 0.9;
+      transform: translate(10%, -4%) rotate(-110deg) scale(0.95);
+      opacity: 0.85;
     }
     75% {
-      transform: translate(-10%, 5%) rotate(270deg);
+      transform: translate(-4%, -10%) rotate(-200deg) scale(1.05);
       opacity: 1;
+    }
+  }
+  
+  /* 粒子光点效果 */
+  @keyframes particle-float {
+    0%, 100% {
+      transform: translateY(0) translateX(0);
+      opacity: 0.3;
+    }
+    50% {
+      transform: translateY(-20px) translateX(10px);
+      opacity: 0.8;
     }
   }
   
   .aurora-bg > * {
     position: relative;
     z-index: 1;
+  }
+  
+  /* Dropdown Animation */
+  @keyframes fadeInSlide {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
   }
 }

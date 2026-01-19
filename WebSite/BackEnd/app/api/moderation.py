@@ -15,6 +15,7 @@ from app.services.moderation_service import (
     get_log,
     list_appeals,
     list_logs,
+    list_user_appeals,
     list_user_logs,
     list_pending_posts,
     resolve_appeal,
@@ -87,6 +88,17 @@ async def list_appeal_items(
     db: AsyncSession = Depends(get_db),
 ):
     appeals = await list_appeals(db, limit, offset)
+    return [AppealResponse(**appeal.__dict__) for appeal in appeals]
+
+
+@router.get("/appeals/me", response_model=list[AppealResponse])
+async def list_my_appeals(
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    appeals = await list_user_appeals(db, user.id, limit, offset)
     return [AppealResponse(**appeal.__dict__) for appeal in appeals]
 
 

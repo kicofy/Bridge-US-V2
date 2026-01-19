@@ -122,6 +122,20 @@ async def list_posts(db: AsyncSession, language: str, limit: int, offset: int) -
     return [await _to_response(db, post, language) for post in posts]
 
 
+async def list_user_posts(
+    db: AsyncSession, user_id: str, language: str, limit: int, offset: int
+) -> list[dict]:
+    result = await db.execute(
+        select(Post)
+        .where(Post.author_id == user_id)
+        .order_by(Post.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    posts = result.scalars().all()
+    return [await _to_response(db, post, language) for post in posts]
+
+
 async def get_post(db: AsyncSession, post_id: str, language: str) -> dict:
     result = await db.execute(select(Post).where(Post.id == post_id))
     post = result.scalar_one_or_none()

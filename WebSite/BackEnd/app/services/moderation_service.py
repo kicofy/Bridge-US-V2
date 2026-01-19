@@ -92,6 +92,17 @@ async def list_appeals(db: AsyncSession, limit: int, offset: int) -> list[Appeal
     return list(result.scalars().all())
 
 
+async def list_user_appeals(db: AsyncSession, user_id: str, limit: int, offset: int) -> list[Appeal]:
+    result = await db.execute(
+        select(Appeal)
+        .where(Appeal.user_id == user_id)
+        .order_by(Appeal.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    return list(result.scalars().all())
+
+
 async def resolve_appeal(db: AsyncSession, appeal_id: str, reviewer_id: str, status: str) -> Appeal:
     result = await db.execute(select(Appeal).where(Appeal.id == appeal_id))
     appeal = result.scalar_one_or_none()

@@ -6,6 +6,7 @@ import { CategorySidebar } from './components/CategorySidebar';
 import { HomePage } from './components/HomePage';
 import { SearchPage } from './components/SearchPage';
 import { ProfilePage } from './components/ProfilePage';
+import { SettingsPage } from './components/SettingsPage';
 import { AIQAPage } from './components/AIQAPage';
 import { PostDetailPage } from './components/PostDetailPage';
 import { NotificationsPage } from './components/NotificationsPage';
@@ -29,6 +30,12 @@ export default function App() {
   const handleAuthSuccess = (userData: { email: string; username: string }) => {
     setCurrentUser(userData);
     setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+    setCurrentPage('home');
   };
 
   const handleLanguageToggle = () => {
@@ -101,6 +108,8 @@ export default function App() {
         onNavigate={handleNavigate}
         language={language}
         onLanguageToggle={handleLanguageToggle}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       <div className="mx-auto max-w-7xl px-3 sm:px-4 py-4 sm:py-6 lg:px-8">
@@ -132,7 +141,14 @@ export default function App() {
             )}
             {currentPage === 'search' && <SearchPage onPostClick={handlePostClick} onAuthorClick={handleAuthorClick} />}
             {currentPage === 'ai-qa' && <AIQAPage language={language} />}
-            {currentPage === 'profile' && <ProfilePage userName={selectedUserName || undefined} onPostClick={handlePostClick} onAuthorClick={handleAuthorClick} onAdminAccess={() => setIsAdminMode(true)} />}
+            {currentPage === 'profile' && <ProfilePage userName={selectedUserName || undefined} onPostClick={handlePostClick} onAuthorClick={handleAuthorClick} onAdminAccess={() => setIsAdminMode(true)} onNavigate={handleNavigate} />}
+            {currentPage === 'settings' && (
+              <SettingsPage 
+                onBack={() => setCurrentPage('home')}
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            )}
             {currentPage === 'notifications' && <NotificationsPage onNotificationClick={handleNotificationClick} />}
             {currentPage === 'create-post' && (
               <CreatePostPage 

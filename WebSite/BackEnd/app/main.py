@@ -23,6 +23,7 @@ from app.core.errors import AppError, app_error_handler, http_exception_handler
 from app.core.logging import setup_logging
 from app.core.middleware import ProcessTimeMiddleware, RequestIdMiddleware
 from app.services.auth_service import ensure_root_admin
+from app.services.category_service import ensure_default_categories
 
 
 def create_app() -> FastAPI:
@@ -46,6 +47,7 @@ def create_app() -> FastAPI:
     async def _ensure_root_admin() -> None:
         async with SessionLocal() as session:
             await ensure_root_admin(session)
+            await ensure_default_categories(session)
 
     app.include_router(health_router, prefix=settings.api_prefix)
     app.include_router(auth_router, prefix=settings.api_prefix)

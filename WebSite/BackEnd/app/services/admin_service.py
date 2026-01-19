@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
-from app.models.models import Post, Reply, User
+from app.models.models import Category, Post, PostTag, Reply, Tag, User
 from app.services.audit_service import log_action
 from app.services.notification_service import create_notification
 
@@ -61,4 +61,50 @@ async def admin_set_reply_status(
     await db.commit()
     await db.refresh(reply)
     return reply
+
+
+async def backfill_post_categories(db: AsyncSession, admin_id: str) -> dict:
+    categories = (
+        await db.execute(select(Category).order_by(Category.sort_order.asc(), Category.name.asc()))
+    ).scalars().all()
+    if not categories:
+        raise AppError(code="category_not_found", message="No categories found", status_code=404)
+
+    category_by_slug = {item.slug: item for item in categories}
+    default_category = categories[0]
+
+    result = await db.execute(select(Post).where(Post.category_id.is_(None)))
+    posts = result.scalars().all()
+    updated = 0
+
+    for post in posts:
+        tag_result = await db.execute(
+            select(Tag.slug)
+            .join(PostTag, Tag.id == PostTag.tag_id)
+            .where(PostTag.post_id == post.id)
+        )
+        tags = [row[0] for row in tag_result.all()]
+        slug = _infer_category_slug(tags)
+        chosen = category_by_slug.get(slug) if slug else None
+        post.category_id = (chosen or default_category).id
+        updated += 1
+
+    await log_action(db, admin_id, "post", "bulk", "post_backfill_category", None)
+    await db.commit()
+    return {"updated": updated}
+
+
+def _infer_category_slug(tags: list[str]) -> str | None:
+    keywords = {
+        "visa": ["visa", "i20", "opt", "cpt"],
+        "housing": ["housing", "rent", "roommate"],
+        "health": ["health", "insurance", "clinic", "medical"],
+        "campus": ["campus", "club", "student"],
+        "work": ["work", "job", "intern", "career"],
+    }
+    lowered = " ".join(tags).lower()
+    for slug, keys in keywords.items():
+        if any(key in lowered for key in keys):
+            return slug
+    return None
 

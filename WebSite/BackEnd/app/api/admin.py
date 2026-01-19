@@ -5,12 +5,15 @@ from app.core.auth import get_admin_user, get_root_admin_user
 from app.core.database import get_db
 from app.models.models import User
 from app.schemas.audit import AuditLogResponse
+from app.schemas.admin_stats import AdminStatsResponse
 from app.services.admin_service import (
     admin_set_post_status,
     admin_set_reply_status,
+    backfill_post_categories,
     list_users,
     set_user_status,
 )
+from app.services.admin_stats_service import get_admin_stats
 from app.services.audit_query_service import list_audit_logs
 
 
@@ -29,6 +32,14 @@ async def users(
         {"id": user.id, "email": user.email, "role": user.role, "status": user.status}
         for user in items
     ]
+
+
+@router.get("/stats", response_model=AdminStatsResponse)
+async def stats(
+    _: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await get_admin_stats(db)
 
 
 @router.get("/audit/logs", response_model=list[AuditLogResponse])
@@ -100,4 +111,13 @@ async def restore_reply(
 ):
     reply = await admin_set_reply_status(db, reply_id, admin.id, "visible", "admin_restore")
     return {"status": "ok", "reply_id": reply.id, "reply_status": reply.status}
+
+
+@router.post("/posts/backfill-categories")
+async def backfill_categories(
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await backfill_post_categories(db, admin.id)
+    return {"status": "ok", **result}
 

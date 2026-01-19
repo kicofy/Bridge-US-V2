@@ -62,3 +62,20 @@ async def delete_category(db: AsyncSession, category_id: str, admin_id: str) -> 
     await db.delete(category)
     await db.commit()
 
+
+async def ensure_default_categories(db: AsyncSession) -> None:
+    result = await db.execute(select(Category).limit(1))
+    existing = result.scalar_one_or_none()
+    if existing is not None:
+        return
+    defaults = [
+        ("Visa & Immigration", "visa", 1),
+        ("Housing", "housing", 2),
+        ("Health & Wellness", "health", 3),
+        ("Campus Life", "campus", 4),
+        ("Work & Internships", "work", 5),
+    ]
+    for name, slug, order in defaults:
+        db.add(Category(name=name, slug=slug, sort_order=order, status="active"))
+    await db.commit()
+

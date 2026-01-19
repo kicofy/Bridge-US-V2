@@ -10,6 +10,7 @@ from app.services.post_service import (
     delete_post,
     get_post,
     list_posts,
+    list_user_posts,
     publish_post,
     update_post,
 )
@@ -26,6 +27,17 @@ async def list_items(
     db: AsyncSession = Depends(get_db),
 ):
     return await list_posts(db, language, limit, offset)
+
+
+@router.get("/me", response_model=list[PostResponse])
+async def list_my_posts(
+    language: str = Query(default="en"),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await list_user_posts(db, user.id, language, limit, offset)
 
 
 @router.get("/{post_id}", response_model=PostResponse)

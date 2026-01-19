@@ -1,0 +1,17 @@
+{
+  "home": {
+    "title": "全部帖子",
+    "subtitle": "面向国际学生的可信社区"
+  },
+  "search": {
+    "emptyTitle": "开始搜索",
+    "emptyDesc": "输入关键词搜索帖子、主题或信息"
+  },
+  "ai": {
+    "knowledgeBase": "AI 知识库",
+    "trustedPosts": "可信帖子",
+    "verifiedAnswers": "认证答案",
+    "expertContributors": "专家贡献者"
+  }
+}
+

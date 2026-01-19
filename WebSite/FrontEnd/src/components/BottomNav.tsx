@@ -1,0 +1,79 @@
+import { Home, Search, MessageCircle, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { cn } from './ui/utils';
+import { use3DHover } from '../hooks/use3DHover';
+
+interface BottomNavProps {
+  currentPage: string;
+  onNavigate: (page: string) => void;
+}
+
+export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
+  const { t } = useTranslation();
+  const navItems = [
+    { id: 'home', label: t('nav.home'), icon: Home },
+    { id: 'search', label: t('nav.search'), icon: Search },
+    { id: 'ai-qa', label: t('nav.ai'), icon: MessageCircle },
+    { id: 'profile', label: t('nav.profile'), icon: User },
+  ];
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t md:hidden safe-area-inset-bottom">
+      <div className="flex items-center justify-around px-2 py-2">
+        {navItems.map((item) => {
+          return (
+            <BottomNavItem
+              key={item.id}
+              item={item}
+              isActive={currentPage === item.id}
+              onNavigate={onNavigate}
+            />
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+function BottomNavItem({ item, isActive, onNavigate }: {
+  item: { id: string; label: string; icon: typeof Home };
+  isActive: boolean;
+  onNavigate: (page: string) => void;
+}) {
+  const btn3D = use3DHover({ maxRotation: 8, scale: 1.05 });
+  const Icon = item.icon;
+
+  return (
+    <button
+      ref={btn3D.ref}
+      style={btn3D.style}
+      onMouseMove={btn3D.onMouseMove}
+      onMouseEnter={btn3D.onMouseEnter}
+      onMouseLeave={btn3D.onMouseLeave}
+      onClick={() => onNavigate(item.id)}
+      className={cn(
+        "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all min-w-[70px]",
+        isActive
+          ? "text-[var(--bridge-blue)]"
+          : "text-muted-foreground active:bg-secondary"
+      )}
+    >
+      <div className={cn(
+        "flex items-center justify-center transition-all",
+        isActive && "scale-110"
+      )}>
+        <Icon 
+          className={cn(
+            "h-6 w-6 transition-all",
+            isActive && "stroke-[2.5]"
+          )} 
+        />
+      </div>
+      <span className={cn(
+        "text-xs transition-all",
+        isActive && "font-semibold"
+      )}>
+        {item.label}
+      </span>
+    </button>
+  );
+}

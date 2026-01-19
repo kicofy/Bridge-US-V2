@@ -12,6 +12,8 @@ from app.services.reply_service import (
     create_reply,
     delete_reply,
     list_replies,
+    list_all_replies,
+    list_user_replies,
     update_reply,
 )
 
@@ -27,6 +29,53 @@ async def get_replies(
     db: AsyncSession = Depends(get_db),
 ):
     replies = await list_replies(db, post_id, limit, offset)
+    return [
+        ReplyResponse(
+            id=item.id,
+            post_id=item.post_id,
+            author_id=item.author_id,
+            content=item.content,
+            helpful_count=item.helpful_count,
+            status=item.status,
+            created_at=item.created_at,
+            updated_at=item.updated_at,
+        )
+        for item in replies
+    ]
+
+
+@router.get("/admin", response_model=list[ReplyResponse])
+async def get_all_replies(
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    status: str | None = Query(default=None),
+    _: User = Depends(get_current_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    replies = await list_all_replies(db, limit, offset, status)
+    return [
+        ReplyResponse(
+            id=item.id,
+            post_id=item.post_id,
+            author_id=item.author_id,
+            content=item.content,
+            helpful_count=item.helpful_count,
+            status=item.status,
+            created_at=item.created_at,
+            updated_at=item.updated_at,
+        )
+        for item in replies
+    ]
+
+
+@router.get("/me", response_model=list[ReplyResponse])
+async def get_my_replies(
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    replies = await list_user_replies(db, user.id, limit, offset)
     return [
         ReplyResponse(
             id=item.id,
