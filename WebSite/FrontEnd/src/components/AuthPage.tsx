@@ -216,6 +216,23 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
   // Render Login View
   const renderLogin = () => (
     <div className="space-y-6">
+      <div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate('/');
+            }
+          }}
+          className="gap-2 rounded-xl -ml-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="text-sm">{t('actions.back')}</span>
+        </Button>
+      </div>
       <div className="text-center space-y-2">
         <h1 className="text-3xl sm:text-4xl font-bold text-[var(--bridge-blue)]">
           {t('auth.welcomeBack')}
