@@ -23,6 +23,7 @@ class PostUpdateRequest(BaseModel):
 class PostResponse(BaseModel):
     id: str
     author_id: str
+    author_name: str | None = None
     category_id: str | None
     status: str
     language: str

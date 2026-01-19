@@ -172,7 +172,7 @@ export function ProfilePage({ userName, onPostClick, onAuthorClick, onAdminAcces
   const user = displayUser;
 
   const mapPostResponse = (item: PostResponse): Post => {
-    const displayName = `User ${item.author_id.slice(0, 6)}`;
+    const displayName = item.author_name || `User ${item.author_id.slice(0, 6)}`;
     const timestamp = item.published_at || item.created_at || '';
     const dateText = timestamp ? new Date(timestamp).toLocaleString() : t('status.loading');
     const preview = item.content.replace(/\s+/g, ' ').trim();

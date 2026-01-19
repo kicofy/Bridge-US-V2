@@ -46,7 +46,7 @@ export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAu
   };
 
   const toPostCard = (item: PostResponse): Post => {
-    const displayName = `User ${item.author_id.slice(0, 6)}`;
+    const displayName = item.author_name || `User ${item.author_id.slice(0, 6)}`;
     const rawTimestamp = item.published_at || item.created_at || '';
     const dateText = rawTimestamp ? new Date(rawTimestamp).toLocaleString() : 'Just now';
     const accuracyScore = item.accuracy_count > 0 ? Math.round(item.accuracy_avg) : 0;

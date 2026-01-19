@@ -3,6 +3,7 @@ import { apiFetch } from './client';
 export type PostResponse = {
   id: string;
   author_id: string;
+  author_name?: string | null;
   category_id: string | null;
   status: string;
   language: string;

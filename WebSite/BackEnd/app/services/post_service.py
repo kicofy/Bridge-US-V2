@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.errors import AppError
-from app.models.models import Category, Post, PostTag, PostTranslation, Tag
+from app.models.models import Category, Post, PostTag, PostTranslation, Profile, Tag
 from app.schemas.post import PostCreateRequest, PostUpdateRequest
 from app.services.ai_service import translate_text
 from app.services.moderation_service import screen_post
@@ -222,9 +222,15 @@ async def _to_response(db: AsyncSession, post: Post, language: str) -> dict:
     )
     tags = [row[0] for row in tag_result.all()]
 
+    author_result = await db.execute(
+        select(Profile.display_name).where(Profile.user_id == post.author_id)
+    )
+    author_name = author_result.scalar_one_or_none()
+
     return {
         "id": post.id,
         "author_id": post.author_id,
+        "author_name": author_name,
         "category_id": post.category_id,
         "status": post.status,
         "language": translation.language,

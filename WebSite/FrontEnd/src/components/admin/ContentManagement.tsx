@@ -103,7 +103,7 @@ export function ContentManagement() {
       title: item.title,
       content: item.content,
       author: {
-        name: `User ${item.author_id.slice(0, 6)}`,
+        name: item.author_name || `User ${item.author_id.slice(0, 6)}`,
         verified: false,
       },
       category: item.category_id ?? undefined,
