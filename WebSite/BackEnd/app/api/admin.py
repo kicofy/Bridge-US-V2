@@ -11,6 +11,7 @@ from app.services.admin_service import (
     admin_set_reply_status,
     backfill_post_categories,
     list_users,
+    set_user_role,
     set_user_status,
 )
 from app.services.admin_stats_service import get_admin_stats
@@ -71,6 +72,16 @@ async def unban_user(
 ):
     user = await set_user_status(db, user_id, "active", admin.id)
     return {"status": "ok", "user_id": user.id, "user_status": user.status}
+
+
+@router.post("/users/{user_id}/make-admin")
+async def make_admin(
+    user_id: str,
+    admin: User = Depends(get_root_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    user = await set_user_role(db, user_id, "admin", admin.id)
+    return {"status": "ok", "user_id": user.id, "user_role": user.role}
 
 
 @router.post("/posts/{post_id}/hide")

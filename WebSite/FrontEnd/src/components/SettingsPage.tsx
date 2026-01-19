@@ -65,6 +65,9 @@ export function SettingsPage() {
       if (user) {
         setUser({
           email: user.email,
+          userId: user.userId,
+          role: user.role,
+          isRoot: user.isRoot,
           displayName: updated.display_name ?? user.displayName,
           languagePreference: profileForm.language_preference,
         });

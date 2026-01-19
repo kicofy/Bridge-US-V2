@@ -53,7 +53,8 @@ async def issue_tokens(db: AsyncSession, user_id: str) -> tuple[str, str]:
     user = result.scalar_one_or_none()
     if user is None:
         raise AppError(code="user_not_found", message="User not found", status_code=404)
-    access_token = create_access_token(user_id, {"role": user.role})
+    is_root = bool(settings.root_account and user.email == settings.root_account)
+    access_token = create_access_token(user_id, {"role": user.role, "is_root": is_root})
     refresh_token = create_refresh_token(user_id)
     expires_at = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_days)
     session = UserSession(

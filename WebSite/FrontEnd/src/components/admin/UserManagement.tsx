@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Filter, Ban, Eye } from 'lucide-react';
+import { Search, Filter, Ban, Eye, Shield } from 'lucide-react';
 import { Button } from '../ui/button';
-import { AdminUser, banUser, listAdminUsers, unbanUser } from '../../api/admin';
+import { AdminUser, banUser, listAdminUsers, makeAdmin, unbanUser } from '../../api/admin';
+import { useAuthStore } from '../../store/auth';
 
 export function UserManagement() {
+  const currentUser = useAuthStore((state) => state.user);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'banned'>('all');
@@ -36,6 +38,16 @@ export function UserManagement() {
       await banUser(user.id);
       setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, status: 'banned' } : item)));
     }
+  };
+
+  const canPromote = currentUser?.role === 'admin' && currentUser?.isRoot;
+
+  const handleMakeAdmin = async (user: AdminUser) => {
+    if (!canPromote || user.role === 'admin') {
+      return;
+    }
+    await makeAdmin(user.id);
+    setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, role: 'admin' } : item)));
   };
 
   const handleViewDetails = (user: User) => {
@@ -163,6 +175,17 @@ export function UserManagement() {
                       >
                         <Ban className={`h-4 w-4 ${user.status === 'banned' ? 'text-red-600' : ''}`} />
                       </Button>
+                      {canPromote && user.role !== 'admin' && user.id !== currentUser?.userId && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleMakeAdmin(user)}
+                          className="h-8 w-8 p-0 rounded-lg"
+                          title="Make admin"
+                        >
+                          <Shield className="h-4 w-4 text-purple-600" />
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>

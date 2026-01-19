@@ -90,6 +90,7 @@ function AppShell() {
             email: currentUser.email,
             userId: profile.user_id,
             role: currentUser.role,
+            isRoot: currentUser.isRoot,
             displayName: displayName,
             languagePreference: profile.language_preference,
           });

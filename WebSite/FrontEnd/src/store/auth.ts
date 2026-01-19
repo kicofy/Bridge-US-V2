@@ -5,6 +5,7 @@ export type AuthUser = {
   email: string;
   userId?: string;
   role?: 'user' | 'admin';
+  isRoot?: boolean;
   displayName?: string;
   languagePreference?: 'en' | 'zh';
 };

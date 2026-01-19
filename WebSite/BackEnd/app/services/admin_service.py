@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
+from app.core.config import settings
 from app.models.models import Category, Post, PostTag, Reply, Tag, User
 from app.services.audit_service import log_action
 from app.services.notification_service import create_notification
@@ -30,6 +31,23 @@ async def set_user_status(db: AsyncSession, user_id: str, status: str, admin_id:
     )
     await db.commit()
     await db.refresh(user)
+    return user
+
+
+async def set_user_role(db: AsyncSession, user_id: str, role: str, admin_id: str) -> User:
+    if role not in {"user", "admin"}:
+        raise AppError(code="invalid_role", message="Invalid role", status_code=400)
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise AppError(code="user_not_found", message="User not found", status_code=404)
+    if settings.root_account and user.email == settings.root_account and role != "admin":
+        raise AppError(code="forbidden", message="Root admin cannot be demoted", status_code=403)
+    if user.role != role:
+        user.role = role
+        await log_action(db, admin_id, "user", user_id, f"user_role_{role}", None)
+        await db.commit()
+        await db.refresh(user)
     return user
 
 

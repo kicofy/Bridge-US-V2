@@ -147,6 +147,7 @@ export function ProfilePage({ userId, onPostClick, onAuthorClick, onAdminAccess 
         email: currentUser.email,
         userId: currentUser.userId,
         role: currentUser.role,
+        isRoot: currentUser.isRoot,
         displayName: updated.display_name || currentUser.displayName,
         languagePreference: currentUser.languagePreference,
       });

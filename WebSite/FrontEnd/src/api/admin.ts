@@ -27,6 +27,12 @@ export async function unbanUser(userId: string) {
   });
 }
 
+export async function makeAdmin(userId: string) {
+  return apiFetch<{ status: string; user_id: string; user_role: string }>(`/admin/users/${userId}/make-admin`, {
+    method: 'POST',
+  });
+}
+
 export async function adminHidePost(postId: string) {
   return apiFetch<{ status: string; post_id: string; post_status: string }>(`/admin/posts/${postId}/hide`, {
     method: 'POST',

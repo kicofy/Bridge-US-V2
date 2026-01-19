@@ -145,7 +145,8 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
       setTokens(tokens.access_token, tokens.refresh_token);
       const payload = getJwtPayload(tokens.access_token);
       const role = payload?.role === 'admin' ? 'admin' : 'user';
-      setUser({ email, displayName: username, languagePreference: registerLanguage, role });
+      const isRoot = Boolean(payload?.is_root);
+      setUser({ email, displayName: username, languagePreference: registerLanguage, role, isRoot });
       try {
         await updateMyProfile({ language_preference: registerLanguage });
         setLanguage(registerLanguage);
@@ -180,6 +181,7 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
       let displayName = email.split('@')[0];
       let languagePreference: 'en' | 'zh' | undefined = undefined;
       let role: 'user' | 'admin' = 'user';
+      let isRoot = false;
       let userId: string | undefined = undefined;
       try {
         const profile = await getMyProfile();
@@ -196,7 +198,8 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
       if (payload?.role === 'admin') {
         role = 'admin';
       }
-      setUser({ email, displayName, languagePreference, userId, role });
+      isRoot = Boolean(payload?.is_root);
+      setUser({ email, displayName, languagePreference, userId, role, isRoot });
       setSuccess(t('auth.loginSuccess'));
       setTimeout(() => {
         navigate('/');
