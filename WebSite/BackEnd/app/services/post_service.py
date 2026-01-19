@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.errors import AppError
-from app.models.models import Category, Post, PostTag, PostTranslation, Profile, Tag
+from app.models.models import Category, Post, PostTag, PostTranslation, Profile, Tag, User
 from app.schemas.post import PostCreateRequest, PostUpdateRequest
 from app.services.ai_service import translate_text
 from app.services.moderation_service import screen_post
@@ -117,14 +117,29 @@ async def delete_post(db: AsyncSession, post_id: str, author_id: str, is_admin: 
 
 
 async def list_posts(
-    db: AsyncSession, language: str, limit: int, offset: int, author_id: str | None = None
+    db: AsyncSession,
+    language: str,
+    limit: int,
+    offset: int,
+    author_id: str | None = None,
+    include_hidden: bool = False,
 ) -> list[dict]:
     stmt = select(Post)
+    if not include_hidden:
+        stmt = stmt.where(Post.status == "published")
     if author_id:
         stmt = stmt.where(Post.author_id == author_id)
     result = await db.execute(stmt.order_by(Post.created_at.desc()).limit(limit).offset(offset))
     posts = result.scalars().all()
     return [await _to_response(db, post, language) for post in posts]
+
+
+def _can_view_post(post: Post, user: User | None) -> bool:
+    if post.status == "published":
+        return True
+    if user and (user.id == post.author_id or user.role == "admin"):
+        return True
+    return False
 
 
 async def list_user_posts(
@@ -141,12 +156,33 @@ async def list_user_posts(
     return [await _to_response(db, post, language) for post in posts]
 
 
-async def get_post(db: AsyncSession, post_id: str, language: str) -> dict:
+async def get_post(db: AsyncSession, post_id: str, language: str, user: User | None = None) -> dict:
     result = await db.execute(select(Post).where(Post.id == post_id))
     post = result.scalar_one_or_none()
     if post is None:
         raise AppError(code="post_not_found", message="Post not found", status_code=404)
+    if not _can_view_post(post, user):
+        raise AppError(code="post_not_found", message="Post not found", status_code=404)
     return await _to_response(db, post, language)
+
+
+async def set_post_visibility(
+    db: AsyncSession, post_id: str, author_id: str, status: str, is_admin: bool = False
+) -> Post:
+    if status not in {"hidden", "published"}:
+        raise AppError(code="invalid_status", message="Invalid status", status_code=400)
+    result = await db.execute(select(Post).where(Post.id == post_id))
+    post = result.scalar_one_or_none()
+    if post is None:
+        raise AppError(code="post_not_found", message="Post not found", status_code=404)
+    if post.author_id != author_id and not is_admin:
+        raise AppError(code="forbidden", message="Not allowed", status_code=403)
+    post.status = status
+    if status == "published" and post.published_at is None:
+        post.published_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(post)
+    return post
 
 
 async def publish_post(db: AsyncSession, post_id: str) -> Post:

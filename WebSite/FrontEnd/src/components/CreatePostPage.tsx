@@ -8,6 +8,7 @@ import { use3DHover } from '../hooks/use3DHover';
 import { createPost } from '../api/posts';
 import { ApiError } from '../api/client';
 import { useTranslation } from 'react-i18next';
+import { stripRichText } from '../utils/text';
 
 interface CreatePostPageProps {
   onBack: () => void;
@@ -59,9 +60,10 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
       newErrors.category = t('createPost.categoryRequired');
     }
 
-    if (!content.trim()) {
+    const plainContent = stripRichText(content);
+    if (!plainContent) {
       newErrors.content = t('createPost.contentRequired');
-    } else if (content.trim().length < 50) {
+    } else if (plainContent.length < 50) {
       newErrors.content = t('createPost.contentMin');
     }
 

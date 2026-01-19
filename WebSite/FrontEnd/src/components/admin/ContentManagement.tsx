@@ -38,7 +38,7 @@ export function ContentManagement() {
     setLoading(true);
     setError(null);
     Promise.all([
-      listPosts({ language: 'en', limit: 50, offset: 0 }),
+      listPosts({ language: 'en', limit: 50, offset: 0, includeHidden: true, auth: true }),
       listAllReplies({ limit: 50, offset: 0 }),
     ])
       .then(([posts, replies]) => {

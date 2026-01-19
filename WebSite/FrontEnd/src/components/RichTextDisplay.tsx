@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface RichTextDisplayProps {
   content: string;
@@ -6,9 +6,13 @@ interface RichTextDisplayProps {
 }
 
 export function RichTextDisplay({ content, className = '' }: RichTextDisplayProps) {
+  const isHtml = useMemo(() => /<\/?[a-z][\s\S]*>/i.test(content), [content]);
   const [formattedContent, setFormattedContent] = useState<JSX.Element[]>([]);
 
   useEffect(() => {
+    if (isHtml) {
+      return;
+    }
     const parseMarkdown = (text: string): JSX.Element[] => {
       const lines = text.split('\n');
       const elements: JSX.Element[] = [];
@@ -208,11 +212,43 @@ export function RichTextDisplay({ content, className = '' }: RichTextDisplayProp
     };
 
     setFormattedContent(parseMarkdown(content));
-  }, [content]);
+  }, [content, isHtml]);
 
-  return (
-    <div className={`prose prose-sm sm:prose max-w-none ${className}`}>
-      {formattedContent}
-    </div>
-  );
+  const sanitizedHtml = useMemo(() => {
+    if (!isHtml) {
+      return '';
+    }
+    try {
+      const doc = new DOMParser().parseFromString(content, 'text/html');
+      const disallowed = doc.querySelectorAll('script, style');
+      disallowed.forEach((node) => node.remove());
+      doc.querySelectorAll('*').forEach((node) => {
+        [...node.attributes].forEach((attr) => {
+          const name = attr.name.toLowerCase();
+          const value = attr.value;
+          if (name.startsWith('on')) {
+            node.removeAttribute(attr.name);
+            return;
+          }
+          if ((name === 'href' || name === 'src') && /^javascript:/i.test(value)) {
+            node.removeAttribute(attr.name);
+          }
+        });
+      });
+      return doc.body.innerHTML;
+    } catch {
+      return content;
+    }
+  }, [content, isHtml]);
+
+  if (isHtml) {
+    return (
+      <div
+        className={`prose prose-sm sm:prose max-w-none ${className}`}
+        dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+      />
+    );
+  }
+
+  return <div className={`prose prose-sm sm:prose max-w-none ${className}`}>{formattedContent}</div>;
 }

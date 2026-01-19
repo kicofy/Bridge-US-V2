@@ -23,6 +23,8 @@ export async function listPosts(params: {
   limit?: number;
   offset?: number;
   authorId?: string;
+  includeHidden?: boolean;
+  auth?: boolean;
 }) {
   const query = new URLSearchParams({
     language: params.language,
@@ -32,7 +34,10 @@ export async function listPosts(params: {
   if (params.authorId) {
     query.set('author_id', params.authorId);
   }
-  return apiFetch<PostResponse[]>(`/posts?${query.toString()}`, { method: 'GET', auth: false });
+  if (params.includeHidden) {
+    query.set('include_hidden', 'true');
+  }
+  return apiFetch<PostResponse[]>(`/posts?${query.toString()}`, { method: 'GET', auth: params.auth ?? false });
 }
 
 export async function listMyPosts(params: { language: string; limit?: number; offset?: number }) {
@@ -44,9 +49,9 @@ export async function listMyPosts(params: { language: string; limit?: number; of
   return apiFetch<PostResponse[]>(`/posts/me?${query.toString()}`, { method: 'GET' });
 }
 
-export async function getPost(postId: string, language: string) {
+export async function getPost(postId: string, language: string, auth: boolean = false) {
   const query = new URLSearchParams({ language });
-  return apiFetch<PostResponse>(`/posts/${postId}?${query.toString()}`, { method: 'GET', auth: false });
+  return apiFetch<PostResponse>(`/posts/${postId}?${query.toString()}`, { method: 'GET', auth });
 }
 
 export async function createPost(payload: {
@@ -77,5 +82,17 @@ export async function updatePost(
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
+}
+
+export async function hidePost(postId: string) {
+  return apiFetch<PostResponse>(`/posts/${postId}/hide`, { method: 'POST' });
+}
+
+export async function restorePost(postId: string) {
+  return apiFetch<PostResponse>(`/posts/${postId}/restore`, { method: 'POST' });
+}
+
+export async function deletePost(postId: string) {
+  return apiFetch<{ status: string }>(`/posts/${postId}`, { method: 'DELETE' });
 }
 

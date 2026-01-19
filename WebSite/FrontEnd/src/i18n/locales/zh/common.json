@@ -25,7 +25,8 @@
     "loading": "加载中...",
     "searching": "搜索中...",
     "noResults": "未找到结果",
-    "startSearch": "开始搜索"
+    "startSearch": "开始搜索",
+    "updateError": "操作失败，请重试。"
   },
   "search": {
     "title": "搜索与发现",
@@ -44,7 +45,12 @@
     "report": "举报",
     "addReply": "添加回复",
     "postReply": "发布回复",
-    "replyPlaceholder": "分享你的想法、经验或建议..."
+    "replyPlaceholder": "分享你的想法、经验或建议...",
+    "hidden": "已隐藏",
+    "hide": "隐藏",
+    "show": "展示",
+    "delete": "删除",
+    "deleteConfirm": "确定要删除这篇帖子吗？"
   },
   "auth": {
     "invalidEmail": "请输入有效邮箱地址",

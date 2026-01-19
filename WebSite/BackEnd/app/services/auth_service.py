@@ -49,7 +49,11 @@ async def authenticate_user(db: AsyncSession, email: str, password: str) -> tupl
 
 
 async def issue_tokens(db: AsyncSession, user_id: str) -> tuple[str, str]:
-    access_token = create_access_token(user_id)
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise AppError(code="user_not_found", message="User not found", status_code=404)
+    access_token = create_access_token(user_id, {"role": user.role})
     refresh_token = create_refresh_token(user_id)
     expires_at = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_days)
     session = UserSession(

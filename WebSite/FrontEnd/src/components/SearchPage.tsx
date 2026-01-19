@@ -8,6 +8,7 @@ import { listCategories } from "../api/categories";
 import { ApiError } from "../api/client";
 import type { PostResponse } from "../api/posts";
 import { useTranslation } from "react-i18next";
+import { previewText } from "../utils/text";
 import { Button } from "./ui/button";
 
 interface SearchPageProps {
@@ -40,8 +41,7 @@ export function SearchPage({
     const displayName = item.author_name || `User ${item.author_id.slice(0, 6)}`;
     const timestamp = item.published_at || item.created_at || "";
     const dateText = timestamp ? new Date(timestamp).toLocaleString() : "Just now";
-    const preview = item.content.replace(/\s+/g, " ").trim();
-    const clipped = preview.length > 160 ? `${preview.slice(0, 160)}...` : preview;
+    const clipped = previewText(item.content);
     return {
       id: item.id,
       title: item.title,
@@ -49,6 +49,7 @@ export function SearchPage({
       content: item.content,
       createdAt: timestamp || undefined,
       notHelpfulCount: 0,
+        status: item.status,
       tags: item.tags,
       author: {
         id: item.author_id,

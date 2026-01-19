@@ -13,6 +13,7 @@ import { useAuthStore } from '../store/auth';
 import { getMyProfile, getProfileById, ProfileResponse, updateMyProfile } from '../api/profile';
 import { listMyPosts, listPosts, PostResponse } from '../api/posts';
 import { listMyReplies, ReplyResponse } from '../api/replies';
+import { previewText } from '../utils/text';
 import { listMyReports, ReportResponse } from '../api/reports';
 
 interface ProfilePageProps {
@@ -72,8 +73,7 @@ export function ProfilePage({ userId, onPostClick, onAuthorClick, onAdminAccess 
     const displayName = item.author_name || `User ${item.author_id.slice(0, 6)}`;
     const timestamp = item.published_at || item.created_at || '';
     const dateText = timestamp ? new Date(timestamp).toLocaleString() : t('status.loading');
-    const preview = item.content.replace(/\s+/g, ' ').trim();
-    const clipped = preview.length > 160 ? `${preview.slice(0, 160)}...` : preview;
+    const clipped = previewText(item.content);
     return {
       id: item.id,
       title: item.title,
@@ -81,6 +81,7 @@ export function ProfilePage({ userId, onPostClick, onAuthorClick, onAdminAccess 
       content: item.content,
       createdAt: timestamp || undefined,
       notHelpfulCount: 0,
+      status: item.status,
       tags: item.tags,
       author: {
         id: item.author_id,
@@ -144,6 +145,8 @@ export function ProfilePage({ userId, onPostClick, onAuthorClick, onAdminAccess 
     if (currentUser?.email) {
       setUser({
         email: currentUser.email,
+        userId: currentUser.userId,
+        role: currentUser.role,
         displayName: updated.display_name || currentUser.displayName,
         languagePreference: currentUser.languagePreference,
       });
@@ -444,7 +447,7 @@ export function ProfilePage({ userId, onPostClick, onAuthorClick, onAdminAccess 
 
 
             {/* Admin Access Button */}
-            {onAdminAccess && (
+            {onAdminAccess && currentUser?.role === 'admin' && (
               <div className="mt-6">
                 <Button
                   variant="outline"

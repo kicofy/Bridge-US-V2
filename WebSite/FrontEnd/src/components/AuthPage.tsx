@@ -10,6 +10,7 @@ import { ApiError } from '../api/client';
 import { useAuthStore } from '../store/auth';
 import { useTranslation } from 'react-i18next';
 import { setLanguage } from '../i18n';
+import { getJwtPayload } from '../utils/jwt';
 
 interface AuthPageProps {
   initialView?: AuthView;
@@ -33,12 +34,35 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const handleBack = () => {
+    let lastPath: string | null = null;
+    try {
+      lastPath = sessionStorage.getItem('lastNonAuthPath');
+    } catch {
+      lastPath = null;
+    }
+    if (lastPath && !lastPath.startsWith('/login') && !lastPath.startsWith('/register') && !lastPath.startsWith('/forgot-password')) {
+      navigate(lastPath);
+      return;
+    }
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate('/');
+  };
+
   useEffect(() => {
     setCurrentView(initialView);
     setError('');
     setSuccess('');
-    setRegisterLanguage(preferredLanguage);
-  }, [initialView, preferredLanguage]);
+  }, [initialView]);
+
+  useEffect(() => {
+    if (currentView === 'register') {
+      setRegisterLanguage(preferredLanguage);
+    }
+  }, [currentView, preferredLanguage]);
 
   const getErrorMessage = (err: unknown) => {
     if (err instanceof ApiError) {
@@ -119,7 +143,9 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
         code: verificationCode,
       });
       setTokens(tokens.access_token, tokens.refresh_token);
-      setUser({ email, displayName: username, languagePreference: registerLanguage });
+      const payload = getJwtPayload(tokens.access_token);
+      const role = payload?.role === 'admin' ? 'admin' : 'user';
+      setUser({ email, displayName: username, languagePreference: registerLanguage, role });
       try {
         await updateMyProfile({ language_preference: registerLanguage });
         setLanguage(registerLanguage);
@@ -153,9 +179,12 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
       setTokens(tokens.access_token, tokens.refresh_token);
       let displayName = email.split('@')[0];
       let languagePreference: 'en' | 'zh' | undefined = undefined;
+      let role: 'user' | 'admin' = 'user';
+      let userId: string | undefined = undefined;
       try {
         const profile = await getMyProfile();
         displayName = profile.display_name || displayName;
+        userId = profile.user_id;
         if (profile.language_preference === 'en' || profile.language_preference === 'zh') {
           languagePreference = profile.language_preference;
           setLanguage(languagePreference);
@@ -163,7 +192,11 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
       } catch {
         // Fallback to email prefix if profile fetch fails
       }
-      setUser({ email, displayName, languagePreference });
+      const payload = getJwtPayload(tokens.access_token);
+      if (payload?.role === 'admin') {
+        role = 'admin';
+      }
+      setUser({ email, displayName, languagePreference, userId, role });
       setSuccess(t('auth.loginSuccess'));
       setTimeout(() => {
         navigate('/');
@@ -221,12 +254,10 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
     <div className="space-y-6">
       <div>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
-          onClick={() => {
-            const fallback = sessionStorage.getItem('lastNonAuthPath') || '/';
-            navigate(fallback);
-          }}
+          onClick={handleBack}
           className="gap-2 rounded-xl -ml-2"
         >
           <ArrowLeft className="h-4 w-4" />

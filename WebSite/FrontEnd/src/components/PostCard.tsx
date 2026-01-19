@@ -17,6 +17,7 @@ export interface Post {
   content?: string;
   createdAt?: string;
   notHelpfulCount?: number;
+  status?: string;
   tags: string[];
   author: {
     id?: string;
@@ -134,6 +135,11 @@ export function PostCard({ post, onClick, onAuthorClick }: PostCardProps) {
           <h3 className="flex-1 text-base sm:text-lg leading-snug group-hover:text-[var(--bridge-blue)] transition-colors">
             {post.title}
           </h3>
+          {post.status === 'hidden' && (
+            <Badge className="rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-xs">
+              {t('posts.hidden')}
+            </Badge>
+          )}
           {/* Translation toggle intentionally hidden per product requirement */}
         </div>
         <p className="text-sm text-muted-foreground line-clamp-2">{post.preview}</p>

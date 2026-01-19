@@ -40,10 +40,14 @@ async def list_all_replies(
     return list(result.scalars().all())
 
 
-async def create_reply(db: AsyncSession, post_id: str, author_id: str, payload: ReplyCreateRequest) -> Reply:
+async def create_reply(
+    db: AsyncSession, post_id: str, author_id: str, payload: ReplyCreateRequest, is_admin: bool = False
+) -> Reply:
     post_result = await db.execute(select(Post).where(Post.id == post_id))
     post = post_result.scalar_one_or_none()
     if post is None:
+        raise AppError(code="post_not_found", message="Post not found", status_code=404)
+    if post.status != "published" and post.author_id != author_id and not is_admin:
         raise AppError(code="post_not_found", message="Post not found", status_code=404)
     reply = Reply(post_id=post_id, author_id=author_id, content=payload.content, status="visible")
     db.add(reply)

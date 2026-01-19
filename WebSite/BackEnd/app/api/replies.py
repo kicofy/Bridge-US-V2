@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import get_current_admin_user, get_current_user
+from sqlalchemy import select
+
+from app.core.auth import get_current_admin_user, get_current_user, get_optional_user
 from app.core.database import get_db
-from app.models.models import User
+from app.core.errors import AppError
+from app.models.models import Post, User
 from app.schemas.reply import ReplyCreateRequest, ReplyResponse, ReplyUpdateRequest
 from app.services.reply_service import (
     admin_delete_reply,
@@ -26,8 +29,16 @@ async def get_replies(
     post_id: str,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    user: User | None = Depends(get_optional_user),
     db: AsyncSession = Depends(get_db),
 ):
+    post_result = await db.execute(select(Post).where(Post.id == post_id))
+    post = post_result.scalar_one_or_none()
+    if post is None:
+        raise AppError(code="post_not_found", message="Post not found", status_code=404)
+    if post.status != "published":
+        if not user or (user.id != post.author_id and user.role != "admin"):
+            raise AppError(code="post_not_found", message="Post not found", status_code=404)
     replies = await list_replies(db, post_id, limit, offset)
     return [
         ReplyResponse(
@@ -98,7 +109,7 @@ async def create(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    reply = await create_reply(db, post_id, user.id, payload)
+    reply = await create_reply(db, post_id, user.id, payload, is_admin=user.role == "admin")
     return ReplyResponse(
         id=reply.id,
         post_id=reply.post_id,

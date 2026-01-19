@@ -32,6 +32,29 @@ async def get_current_user(
     return user
 
 
+async def get_optional_user(
+    authorization: str | None = Header(default=None),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    token = authorization.split(" ", 1)[1]
+    try:
+        payload = decode_token(token)
+    except ValueError as exc:
+        raise AppError(code="invalid_token", message="Invalid token", status_code=401) from exc
+    user_id = payload.get("sub")
+    if not user_id:
+        raise AppError(code="invalid_token", message="Invalid token", status_code=401)
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise AppError(code="unauthorized", message="User not found", status_code=401)
+    if user.status == "banned":
+        raise AppError(code="user_banned", message="User is banned", status_code=403)
+    return user
+
+
 async def get_admin_user(user: User = Depends(get_current_user)) -> User:
     if user.role != "admin":
         raise AppError(code="forbidden", message="Admin only", status_code=403)

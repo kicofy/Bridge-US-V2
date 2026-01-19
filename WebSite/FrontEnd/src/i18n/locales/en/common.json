@@ -25,7 +25,8 @@
     "loading": "Loading...",
     "searching": "Searching...",
     "noResults": "No results found",
-    "startSearch": "Start your search"
+    "startSearch": "Start your search",
+    "updateError": "Failed to update. Please try again."
   },
   "search": {
     "title": "Search & Discover",
@@ -44,7 +45,12 @@
     "report": "Report",
     "addReply": "Add a Reply",
     "postReply": "Post Reply",
-    "replyPlaceholder": "Share your thoughts, experiences, or helpful advice..."
+    "replyPlaceholder": "Share your thoughts, experiences, or helpful advice...",
+    "hidden": "Hidden",
+    "hide": "Hide",
+    "show": "Show",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete this post?"
   },
   "auth": {
     "invalidEmail": "Please enter a valid email address",

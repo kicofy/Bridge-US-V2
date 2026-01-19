@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Bold, Italic, Link, Image, List, ListOrdered, Heading2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { uploadImage } from '../api/files';
@@ -10,7 +10,7 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const [showImageInput, setShowImageInput] = useState(false);
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
@@ -19,53 +19,32 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   const [imageError, setImageError] = useState<string | null>(null);
   const [linkUrl, setLinkUrl] = useState('');
   const [linkText, setLinkText] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
 
-  const insertMarkdown = (prefix: string, suffix: string = '', placeholder: string = '') => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor || isFocused) {
+      return;
+    }
+    if (editor.innerHTML !== value) {
+      editor.innerHTML = value || '';
+    }
+  }, [value, isFocused]);
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = value.substring(start, end);
-    const text = selectedText || placeholder;
-    
-    const before = value.substring(0, start);
-    const after = value.substring(end);
-    const newText = `${before}${prefix}${text}${suffix}${after}`;
-    
-    onChange(newText);
-    
-    // Set cursor position
-    setTimeout(() => {
-      const newPos = start + prefix.length + text.length;
-      textarea.focus();
-      textarea.setSelectionRange(newPos, newPos);
-    }, 0);
+  const emitChange = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    onChange(editor.innerHTML);
   };
 
-  const handleBold = () => {
-    insertMarkdown('**', '**', 'bold text');
-  };
-
-  const handleItalic = () => {
-    insertMarkdown('*', '*', 'italic text');
-  };
-
-  const handleHeading = () => {
-    insertMarkdown('\n## ', '', 'Heading');
-  };
-
-  const handleBulletList = () => {
-    insertMarkdown('\n- ', '', 'List item');
-  };
-
-  const handleNumberedList = () => {
-    insertMarkdown('\n1. ', '', 'List item');
+  const execCommand = (command: string, valueArg?: string) => {
+    document.execCommand(command, false, valueArg);
+    emitChange();
   };
 
   const handleImageInsert = () => {
     if (!imageUrl.trim()) return;
-    insertMarkdown(`\n![Image](${imageUrl})\n`, '', '');
+    execCommand('insertImage', imageUrl.trim());
     setImageUrl('');
     setShowImageInput(false);
   };
@@ -76,7 +55,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
     setImageError(null);
     try {
       const uploaded = await uploadImage(imageFile);
-      insertMarkdown(`\n![Image](${uploaded.url})\n`, '', '');
+      execCommand('insertImage', uploaded.url);
       setImageFile(null);
       setShowImageInput(false);
     } catch (err) {
@@ -88,8 +67,11 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
 
   const handleLinkInsert = () => {
     if (!linkUrl.trim()) return;
-    const text = linkText.trim() || linkUrl;
-    insertMarkdown(`[${text}](${linkUrl})`, '', '');
+    if (linkText.trim()) {
+      execCommand('insertHTML', `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${linkText}</a>`);
+    } else {
+      execCommand('createLink', linkUrl.trim());
+    }
     setLinkUrl('');
     setLinkText('');
     setShowLinkInput(false);
@@ -103,9 +85,9 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="sm"
-          onClick={handleBold}
+          onClick={() => execCommand('bold')}
           className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-background"
-          title="Bold (Ctrl+B)"
+          title="Bold"
         >
           <Bold className="h-4 w-4" />
         </Button>
@@ -113,9 +95,9 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="sm"
-          onClick={handleItalic}
+          onClick={() => execCommand('italic')}
           className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-background"
-          title="Italic (Ctrl+I)"
+          title="Italic"
         >
           <Italic className="h-4 w-4" />
         </Button>
@@ -123,7 +105,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="sm"
-          onClick={handleHeading}
+          onClick={() => execCommand('formatBlock', 'h2')}
           className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-background"
           title="Heading"
         >
@@ -134,7 +116,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="sm"
-          onClick={handleBulletList}
+          onClick={() => execCommand('insertUnorderedList')}
           className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-background"
           title="Bullet List"
         >
@@ -144,7 +126,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="sm"
-          onClick={handleNumberedList}
+          onClick={() => execCommand('insertOrderedList')}
           className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-background"
           title="Numbered List"
         >
@@ -286,14 +268,27 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         </div>
       )}
 
-      {/* Textarea */}
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full min-h-[200px] sm:min-h-[300px] rounded-xl border bg-background p-3 sm:p-4 text-sm sm:text-base resize-y focus:outline-none focus:ring-2 focus:ring-[var(--bridge-blue)] font-mono"
-      />
+      {/* Editable area */}
+      <div className="relative">
+        {!value && !isFocused && placeholder && (
+          <div className="pointer-events-none absolute left-4 top-3 text-sm text-muted-foreground">
+            {placeholder}
+          </div>
+        )}
+        <div
+          ref={editorRef}
+          className="min-h-[200px] sm:min-h-[300px] rounded-xl border bg-background p-3 sm:p-4 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[var(--bridge-blue)]"
+          contentEditable
+          suppressContentEditableWarning
+          onInput={emitChange}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => {
+            setIsFocused(false);
+            emitChange();
+          }}
+        />
+      </div>
     </div>
   );
 }
+

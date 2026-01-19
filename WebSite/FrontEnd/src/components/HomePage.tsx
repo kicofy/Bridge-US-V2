@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { listPosts, PostResponse } from '../api/posts';
 import { ApiError } from '../api/client';
 import { useTranslation } from 'react-i18next';
+import { previewText } from '../utils/text';
 
 interface HomePageProps {
   selectedCategory: string;
@@ -35,10 +36,7 @@ export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAu
   // All available posts loaded from backend
   const [allPosts, setAllPosts] = useState<Post[]>([]);
 
-  const buildPreview = (content: string) => {
-    const plain = content.replace(/\s+/g, ' ').trim();
-    return plain.length > 160 ? `${plain.slice(0, 160)}...` : plain;
-  };
+  const buildPreview = (content: string) => previewText(content);
 
   const toPostCard = (item: PostResponse): Post => {
     const displayName = item.author_name || `User ${item.author_id.slice(0, 6)}`;
@@ -52,6 +50,7 @@ export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAu
       content: item.content,
       createdAt: rawTimestamp || undefined,
       notHelpfulCount: 0,
+        status: item.status,
       tags: item.tags,
       author: {
         id: item.author_id,

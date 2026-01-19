@@ -15,13 +15,14 @@ export async function listReplies(params: {
   postId: string;
   limit?: number;
   offset?: number;
+  auth?: boolean;
 }) {
   const query = new URLSearchParams({
     post_id: params.postId,
     limit: String(params.limit ?? 20),
     offset: String(params.offset ?? 0),
   });
-  return apiFetch<ReplyResponse[]>(`/replies?${query.toString()}`, { method: 'GET', auth: false });
+  return apiFetch<ReplyResponse[]>(`/replies?${query.toString()}`, { method: 'GET', auth: params.auth ?? false });
 }
 
 export async function createReply(postId: string, content: string) {

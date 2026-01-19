@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 
 export type AuthUser = {
   email: string;
+  userId?: string;
+  role?: 'user' | 'admin';
   displayName?: string;
   languagePreference?: 'en' | 'zh';
 };

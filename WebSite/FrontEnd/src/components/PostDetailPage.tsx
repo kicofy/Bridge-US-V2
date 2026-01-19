@@ -8,6 +8,7 @@ import { Post } from './PostCard';
 import { use3DHover } from '../hooks/use3DHover';
 import { ApiError } from '../api/client';
 import { createReply, listReplies } from '../api/replies';
+import { deletePost, hidePost, restorePost } from '../api/posts';
 import { createReport } from '../api/reports';
 import {
   markPostHelpful,
@@ -22,6 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { useAuthStore } from '../store/auth';
 
 interface Reply {
   id: string;
@@ -80,6 +82,8 @@ const mockReplies: Reply[] = [
 
 export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPageProps) {
   const { t } = useTranslation();
+  const currentUser = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken));
   const [replyText, setReplyText] = useState('');
   const [replies, setReplies] = useState<Reply[]>([]);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
@@ -89,11 +93,14 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
   const [postHelpful, setPostHelpful] = useState(false);
   const [postHelpfulCount, setPostHelpfulCount] = useState(post.helpfulCount);
   const [replyHelpfulState, setReplyHelpfulState] = useState<Record<string, boolean>>({});
+  const [statusUpdating, setStatusUpdating] = useState(false);
 
   useEffect(() => {
     setActivePost(post);
     setPostHelpfulCount(post.helpfulCount);
   }, [post]);
+
+  const isOwner = Boolean(currentUser?.userId && activePost.author.id === currentUser.userId);
 
   const mapReply = (item: {
     id: string;
@@ -122,7 +129,7 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
     if (!activePost.id) return;
     setReplyLoading(true);
     setReplyError(null);
-    listReplies({ postId: activePost.id, limit: 50, offset: 0 })
+    listReplies({ postId: activePost.id, limit: 50, offset: 0, auth: isAuthenticated })
       .then((items) => {
         setReplies(items.map(mapReply));
       })
@@ -131,7 +138,7 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
         setReplyError(message);
       })
       .finally(() => setReplyLoading(false));
-  }, [activePost.id]);
+  }, [activePost.id, isAuthenticated]);
 
   const handleSubmitReply = async () => {
     if (!replyText.trim()) return;
@@ -166,6 +173,42 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Failed to submit report';
       alert(message);
+    }
+  };
+
+  const handleToggleVisibility = async () => {
+    if (!isOwner || statusUpdating) return;
+    setStatusUpdating(true);
+    try {
+      if (activePost.status === 'hidden') {
+        const updated = await restorePost(activePost.id);
+        setActivePost((prev) => ({ ...prev, status: updated.status }));
+      } else {
+        const updated = await hidePost(activePost.id);
+        setActivePost((prev) => ({ ...prev, status: updated.status }));
+      }
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : t('status.updateError');
+      setReplyError(message);
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
+  const handleDeletePost = async () => {
+    if (!isOwner || statusUpdating) return;
+    if (!window.confirm(t('posts.deleteConfirm'))) {
+      return;
+    }
+    setStatusUpdating(true);
+    try {
+      await deletePost(activePost.id);
+      onBack();
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : t('status.updateError');
+      setReplyError(message);
+    } finally {
+      setStatusUpdating(false);
     }
   };
 
@@ -291,9 +334,40 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
           </div>
         </div>
 
-        {/* Title and translation toggle */}
+        {/* Title and author controls */}
         <div className="mb-4 flex items-start justify-between gap-4">
-          <h1 className="flex-1 text-xl sm:text-2xl leading-snug">{activePost.title}</h1>
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-2xl leading-snug">{activePost.title}</h1>
+            {activePost.status === 'hidden' && (
+              <div className="mt-2">
+                <Badge className="rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-xs">
+                  {t('posts.hidden')}
+                </Badge>
+              </div>
+            )}
+          </div>
+          {isOwner && (
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleToggleVisibility}
+                disabled={statusUpdating}
+                className="rounded-xl"
+              >
+                {activePost.status === 'hidden' ? t('posts.show') : t('posts.hide')}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleDeletePost}
+                disabled={statusUpdating}
+                className="rounded-xl text-destructive hover:text-destructive"
+              >
+                {t('posts.delete')}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Tags */}

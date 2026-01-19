@@ -13,6 +13,7 @@ import { NotificationsPage } from './components/NotificationsPage';
 import { CreatePostPage, NewPost } from './components/CreatePostPage';
 import { CreatePostButton } from './components/CreatePostButton';
 import { AdminDashboard } from './components/AdminDashboard';
+import { previewText } from './utils/text';
 import { SettingsPage } from './components/SettingsPage';
 import { Post } from './components/PostCard';
 import { Notification } from './components/NotificationDropdown';
@@ -87,6 +88,8 @@ function AppShell() {
           const displayName = profile.display_name || currentUser.displayName;
           setUser({
             email: currentUser.email,
+            userId: profile.user_id,
+            role: currentUser.role,
             displayName: displayName,
             languagePreference: profile.language_preference,
           });
@@ -238,6 +241,7 @@ function AppShell() {
                         onBack={handleBackToPosts}
                         onAuthorClick={handleAuthorClick}
                         language={language}
+                            isAuthenticated={isAuthenticated}
                       />
                     }
                   />
@@ -310,11 +314,12 @@ function AppShell() {
   );
 }
 
-function PostDetailRoute({ selectedPost, onBack, onAuthorClick, language }: {
+function PostDetailRoute({ selectedPost, onBack, onAuthorClick, language, isAuthenticated }: {
   selectedPost: Post | null;
   onBack: () => void;
   onAuthorClick: (authorId: string, authorName: string) => void;
   language: string;
+  isAuthenticated: boolean;
 }) {
   const { id } = useParams();
   const [post, setPost] = useState<Post | null>(selectedPost ?? null);
@@ -324,7 +329,7 @@ function PostDetailRoute({ selectedPost, onBack, onAuthorClick, language }: {
     if (!id) {
       throw new Error('Post not found');
     }
-    const data = await getPost(id, targetLanguage);
+    const data = await getPost(id, targetLanguage, isAuthenticated);
     const mapped = mapPostResponse(data);
     setPost(mapped);
     return mapped;
@@ -340,11 +345,18 @@ function PostDetailRoute({ selectedPost, onBack, onAuthorClick, language }: {
     }
     requestPost(language).catch((err) => {
       const message = err instanceof ApiError ? err.message : 'Failed to load post';
+      setPost(null);
       setError(message);
     });
-  }, [id, language, selectedPost]);
+  }, [id, language, selectedPost, isAuthenticated]);
 
-  const resolvedPost = post || mockPosts.find((item) => item.id === id) || mockPosts[0];
+  if (!post) {
+    return error ? (
+      <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        {error}
+      </div>
+    ) : null;
+  }
 
   return (
     <>
@@ -354,7 +366,7 @@ function PostDetailRoute({ selectedPost, onBack, onAuthorClick, language }: {
         </div>
       )}
       <PostDetailPage
-        post={resolvedPost}
+        post={post}
         onBack={onBack}
         onAuthorClick={onAuthorClick}
       />
@@ -401,8 +413,7 @@ function mapPostResponse(item: PostResponse): Post {
   const timestamp = item.published_at || item.created_at || '';
   const dateText = timestamp ? new Date(timestamp).toLocaleString() : 'Just now';
   const accuracyScore = item.accuracy_count > 0 ? Math.round(item.accuracy_avg) : 0;
-  const preview = item.content.replace(/\s+/g, ' ').trim();
-  const clipped = preview.length > 160 ? `${preview.slice(0, 160)}...` : preview;
+  const clipped = previewText(item.content);
   return {
     id: item.id,
     title: item.title,
@@ -410,6 +421,7 @@ function mapPostResponse(item: PostResponse): Post {
     content: item.content,
     createdAt: timestamp || undefined,
     notHelpfulCount: 0,
+    status: item.status,
     tags: item.tags,
     author: {
       id: item.author_id,
