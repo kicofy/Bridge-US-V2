@@ -224,6 +224,7 @@ export function Navigation({
                 <option value="zh">中文</option>
                 <option value="ko">한국어</option>
                 <option value="vi">Tiếng Việt</option>
+                <option value="ne">नेपाली</option>
               </select>
             </div>
             {isAuthenticated && (

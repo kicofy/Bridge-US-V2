@@ -64,12 +64,20 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
           '졸업 후 OPT 신청은 어떻게 하나요?',
           '캠퍼스에서 할 수 있는 좋은 파트타임 일자리는?',
         ]
-      : [
+      : language === 'vi'
+      ? [
           'Cần giấy tờ gì để gia hạn visa F-1?',
           'Làm sao tìm nhà ở giá phải chăng gần trường?',
           'Có những lựa chọn bảo hiểm sức khỏe nào?',
           'Cách nộp OPT sau khi tốt nghiệp?',
           'Những việc làm bán thời gian tốt trong campus?',
+        ]
+      : [
+          'F-1 भिसा विस्तारका लागि के कागजात चाहिन्छ?',
+          'क्याम्पस नजिक सस्तो आवास कसरी खोज्ने?',
+          'कुन-कुन स्वास्थ्य बीमा विकल्प छन्?',
+          'स्नातकपछि OPT कसरी आवेदन गर्ने?',
+          'क्याम्पसमा राम्रो पार्ट-टाइम काम के के छन्?',
         ];
 
   useEffect(() => {
@@ -160,7 +168,9 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
             ? `抱歉，未能完成请求。${message}`
             : language === 'ko'
             ? `죄송합니다. 요청을 처리하지 못했습니다. ${message}`
-            : `Xin lỗi, tôi không thể xử lý yêu cầu. ${message}`,
+            : language === 'vi'
+            ? `Xin lỗi, tôi không thể xử lý yêu cầu. ${message}`
+            : `माफ गर्नुहोस्, म अनुरोध पूरा गर्न सकिनँ। ${message}`,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMessage]);
@@ -254,7 +264,9 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
                                 ? '相关可信帖子'
                                 : language === 'ko'
                                 ? '관련 신뢰 글'
-                                : 'Bài viết liên quan đáng tin cậy'}
+                                : language === 'vi'
+                                ? 'Bài viết liên quan đáng tin cậy'
+                                : 'सम्बन्धित विश्वसनीय पोस्ट'}
                             </span>
                           </div>
                           {message.relatedPosts.map((post, idx) => (
@@ -279,7 +291,9 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
                             ? 'zh-CN'
                             : language === 'ko'
                             ? 'ko-KR'
-                            : 'vi-VN',
+                            : language === 'vi'
+                            ? 'vi-VN'
+                            : 'ne-NP',
                           {
                             hour: '2-digit',
                             minute: '2-digit',

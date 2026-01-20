@@ -20,7 +20,7 @@ type AuthView = 'login' | 'register' | 'forgot-password' | 'verify-email' | 'res
 
 export function AuthPage({ initialView = 'login' }: AuthPageProps) {
   const { t, i18n } = useTranslation();
-  const preferredLanguage = (['zh', 'ko', 'vi'].includes(i18n.language) ? (i18n.language as LanguageCode) : 'en') as LanguageCode;
+  const preferredLanguage = (['zh', 'ko', 'vi', 'ne'].includes(i18n.language) ? (i18n.language as LanguageCode) : 'en') as LanguageCode;
   const navigate = useNavigate();
   const { setTokens, setUser } = useAuthStore();
   const [currentView, setCurrentView] = useState<AuthView>(initialView);
@@ -191,7 +191,8 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
           profile.language_preference === 'en' ||
           profile.language_preference === 'zh' ||
           profile.language_preference === 'ko' ||
-          profile.language_preference === 'vi'
+          profile.language_preference === 'vi' ||
+          profile.language_preference === 'ne'
         ) {
           languagePreference = profile.language_preference;
           setLanguage(languagePreference);

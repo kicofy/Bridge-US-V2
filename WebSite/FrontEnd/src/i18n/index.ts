@@ -5,12 +5,14 @@ import enCommon from './locales/en/common.json';
 import zhCommon from './locales/zh/common.json';
 import koCommon from './locales/ko/common.json';
 import viCommon from './locales/vi/common.json';
+import neCommon from './locales/ne/common.json';
 import enRoutes from './locales/en/routes.json';
 import zhRoutes from './locales/zh/routes.json';
 import koRoutes from './locales/ko/routes.json';
 import viRoutes from './locales/vi/routes.json';
+import neRoutes from './locales/ne/routes.json';
 
-export const supportedLanguages = ['en', 'zh', 'ko', 'vi'] as const;
+export const supportedLanguages = ['en', 'zh', 'ko', 'vi', 'ne'] as const;
 export type LanguageCode = (typeof supportedLanguages)[number];
 
 const STORAGE_KEY = 'bridgeus-language';
@@ -33,6 +35,7 @@ instance.use(initReactI18next).init({
     zh: { common: zhCommon, routes: zhRoutes },
     ko: { common: koCommon, routes: koRoutes },
     vi: { common: viCommon, routes: viRoutes },
+    ne: { common: neCommon, routes: neRoutes },
   },
   lng: getInitialLanguage(),
   fallbackLng: 'en',
