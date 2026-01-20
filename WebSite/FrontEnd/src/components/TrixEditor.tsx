@@ -24,8 +24,7 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
     if (!editor) return;
 
     const handleFileAccept = (event: Event) => {
-      const detail = (event as CustomEvent).detail;
-      const file = detail?.file as File | undefined;
+      const file = (event as unknown as { file?: File }).file;
       if (!file) return;
       if (!file.type.startsWith('image/')) {
         event.preventDefault();
@@ -88,9 +87,8 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
     };
 
     const handleAttachmentAdd = async (event: Event) => {
-      const detail = (event as CustomEvent).detail;
-      const attachment = detail?.attachment;
-      const file = attachment?.file as File | undefined;
+      const attachment = (event as unknown as { attachment?: { file?: File } }).attachment;
+      const file = attachment?.file;
       if (!file) return;
       if (!file.type.startsWith('image/')) {
         return;
@@ -99,8 +97,11 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
       let previewUrl: string | null = null;
       try {
         previewUrl = URL.createObjectURL(file);
-        if (typeof attachment?.setAttributes === 'function') {
-          attachment.setAttributes({ previewURL: previewUrl });
+        if (typeof (attachment as any)?.setAttribute === 'function') {
+          (attachment as any).setAttribute('previewable', true);
+        }
+        if (typeof (attachment as any)?.setPreviewURL === 'function') {
+          (attachment as any).setPreviewURL(previewUrl);
         }
         if (typeof attachment?.setUploadProgress === 'function') {
           attachment.setUploadProgress(0);
