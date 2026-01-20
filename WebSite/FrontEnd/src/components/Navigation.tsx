@@ -1,17 +1,17 @@
+import React, { useRef, useState } from 'react';
 import { Globe, LogOut, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button } from './ui/button';
 import { NotificationDropdown, Notification } from './NotificationDropdown';
 import { use3DHover } from '../hooks/use3DHover';
 import { useAuthStore } from '../store/auth';
 import { logoutUser } from '../api/auth';
-import { useRef, useState } from 'react';
+import { LanguageCode } from '../i18n';
 
 interface NavigationProps {
   currentPage: string;
   onNavigate: (page: string) => void;
-  language: string;
-  onLanguageToggle: () => void;
+  language: LanguageCode;
+  onLanguageChange: (lang: LanguageCode) => void;
   onNotificationClick?: (notification: Notification) => void;
 }
 
@@ -19,7 +19,7 @@ export function Navigation({
   currentPage,
   onNavigate,
   language,
-  onLanguageToggle,
+  onLanguageChange,
   onNotificationClick,
 }: NavigationProps) {
   const { t, i18n } = useTranslation();
@@ -42,8 +42,8 @@ export function Navigation({
     onNavigate('notifications');
   };
 
-  const handleLanguageChange = () => {
-    onLanguageToggle();
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onLanguageChange(e.target.value as LanguageCode);
   };
 
   const handleLogout = async () => {
@@ -212,18 +212,18 @@ export function Navigation({
               onMouseMove={langBtn3D.onMouseMove}
               onMouseEnter={langBtn3D.onMouseEnter}
               onMouseLeave={langBtn3D.onMouseLeave}
+              className="flex items-center gap-2 rounded-xl border bg-white px-2 py-1"
             >
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLanguageChange}
-                className="rounded-xl gap-2"
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <select
+                value={language}
+                onChange={handleLanguageChange}
+                className="bg-transparent text-sm outline-none"
               >
-                <Globe className="h-4 w-4" />
-                <span className="hidden sm:inline text-sm">
-                  {language === 'en' ? 'EN' : language === 'zh' ? '中文' : 'KO'}
-                </span>
-              </Button>
+                <option value="en">English</option>
+                <option value="zh">中文</option>
+                <option value="ko">한국어</option>
+              </select>
             </div>
             {isAuthenticated && (
               <NotificationDropdown

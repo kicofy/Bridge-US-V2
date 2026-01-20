@@ -22,7 +22,7 @@ import { ApiError } from './api/client';
 import { getPost, PostResponse } from './api/posts';
 import { getMyProfile, updateMyProfile } from './api/profile';
 import { useAuthStore } from './store/auth';
-import { setLanguage, LanguageCode } from './i18n';
+import { setLanguage, LanguageCode, supportedLanguages } from './i18n';
 import { useTranslation } from 'react-i18next';
 
 export default function App() {
@@ -38,7 +38,6 @@ function AppShell() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const supportedLanguages: LanguageCode[] = ['en', 'zh', 'ko'];
   const language: LanguageCode = supportedLanguages.includes(i18n.language as LanguageCode)
     ? (i18n.language as LanguageCode)
     : 'en';
@@ -67,9 +66,7 @@ function AppShell() {
 
   const backgroundClass = useMemo(() => 'aurora-bg', []);
 
-  const handleLanguageToggle = () => {
-    const idx = supportedLanguages.indexOf(language);
-    const next = supportedLanguages[(idx + 1) % supportedLanguages.length];
+  const handleLanguageChange = (next: LanguageCode) => {
     setLanguage(next);
     if (isAuthenticated) {
       updateMyProfile({ language_preference: next }).catch(() => {
@@ -178,7 +175,7 @@ function AppShell() {
             currentPage={currentPage}
             onNavigate={handleNavigate}
             language={language}
-            onLanguageToggle={handleLanguageToggle}
+            onLanguageChange={handleLanguageChange}
             onNotificationClick={handleNotificationClick}
           />
 
