@@ -19,12 +19,21 @@ import { ReportManagement } from './admin/ReportManagement';
 import { CategoryTagManagement } from './admin/CategoryTagManagement';
 import { AuditLog } from './admin/AuditLog';
 import { VerificationManagement } from './admin/VerificationManagement';
+import { ModerationQueue } from './admin/ModerationQueue';
 
 interface AdminDashboardProps {
   onExit: () => void;
 }
 
-type AdminSection = 'dashboard' | 'users' | 'content' | 'reports' | 'verification' | 'categories' | 'audit-log';
+type AdminSection =
+  | 'dashboard'
+  | 'users'
+  | 'content'
+  | 'reports'
+  | 'verification'
+  | 'categories'
+  | 'audit-log'
+  | 'moderation';
 
 const menuItems = [
   {
@@ -50,6 +59,12 @@ const menuItems = [
     label: 'Reports',
     icon: Flag,
     description: 'Moderation Queue',
+  },
+  {
+    id: 'moderation' as const,
+    label: 'Post Reviews',
+    icon: FileText,
+    description: 'Pending Posts',
   },
   {
     id: 'verification' as const,
@@ -86,6 +101,8 @@ export function AdminDashboard({ onExit }: AdminDashboardProps) {
         return <ContentManagement />;
       case 'reports':
         return <ReportManagement />;
+      case 'moderation':
+        return <ModerationQueue />;
       case 'verification':
         return <VerificationManagement />;
       case 'categories':

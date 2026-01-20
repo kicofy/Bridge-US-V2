@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_admin_user, get_current_user
 from app.core.database import get_db
-from app.models.models import User
+from app.models.models import PostTranslation, User
 from app.schemas.moderation import (
     AppealCreateRequest,
     AppealResponse,
@@ -130,15 +131,42 @@ async def get_pending_posts(
     db: AsyncSession = Depends(get_db),
 ):
     posts = await list_pending_posts(db, limit, offset)
-    return [
-        {
-            "id": post.id,
-            "author_id": post.author_id,
-            "status": post.status,
-            "created_at": post.created_at,
-        }
-        for post in posts
-    ]
+    if not posts:
+        return []
+
+    post_ids = [post.id for post in posts]
+    author_ids = {post.author_id for post in posts}
+
+    users_by_id: dict[str, User] = {}
+    if author_ids:
+        result = await db.execute(select(User).where(User.id.in_(author_ids)))
+        users_by_id = {user.id: user for user in result.scalars().all()}
+
+    translations_by_post: dict[str, list[PostTranslation]] = {}
+    result = await db.execute(select(PostTranslation).where(PostTranslation.post_id.in_(post_ids)))
+    for translation in result.scalars().all():
+        translations_by_post.setdefault(translation.post_id, []).append(translation)
+
+    response = []
+    for post in posts:
+        translations = translations_by_post.get(post.id, [])
+        selected = next(
+            (t for t in translations if t.language == post.original_language),
+            translations[0] if translations else None,
+        )
+        author = users_by_id.get(post.author_id)
+        response.append(
+            {
+                "id": post.id,
+                "author_id": post.author_id,
+                "author_email": author.email if author else None,
+                "status": post.status,
+                "created_at": post.created_at,
+                "original_language": post.original_language,
+                "title": selected.title if selected else None,
+            }
+        )
+    return response
 
 
 @router.post("/posts/{post_id}/approve")
