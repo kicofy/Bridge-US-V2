@@ -17,6 +17,7 @@ interface Message {
   content: string;
   timestamp: Date;
   relatedPosts?: { title: string; category: string }[];
+  fullContent?: string; // 用于逐字展示的完整文本
 }
 
 interface AIQAPageProps {
@@ -36,6 +37,7 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const typingTimers = useRef<number[]>([]);
 
   const suggestedQuestions = language === 'en' ? [
     'What documents do I need for F-1 visa extension?',
@@ -65,6 +67,41 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
     });
   }, [messages, isTyping]);
 
+  // 清理未完成的打字计时器，避免组件卸载后仍调用 setState
+  useEffect(() => {
+    return () => {
+      typingTimers.current.forEach((t) => clearTimeout(t));
+      typingTimers.current = [];
+    };
+  }, []);
+
+  const startTypewriter = (messageId: string, fullText: string) => {
+    const total = fullText.length;
+    if (total === 0) return;
+
+    // 动态步长：文本越长，每步前进字符越多，控制总耗时
+    const step = Math.max(1, Math.floor(total / 80));
+
+    const tick = (index: number) => {
+      const nextIndex = Math.min(total, index + step);
+      const slice = fullText.slice(0, nextIndex);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, content: slice } : m))
+      );
+      if (nextIndex < total) {
+        const timer = window.setTimeout(() => tick(nextIndex), 16);
+        typingTimers.current.push(timer);
+      } else {
+        // 确保最终文本完整
+        setMessages((prev) =>
+          prev.map((m) => (m.id === messageId ? { ...m, content: fullText } : m))
+        );
+      }
+    };
+
+    tick(0);
+  };
+
   const handleSendMessage = async (content?: string) => {
     const messageContent = content || inputValue.trim();
     if (!messageContent || isTyping) return;
@@ -82,13 +119,16 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
 
     try {
       const response = await askQuestion(messageContent);
+      const assistantId = (Date.now() + 1).toString();
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: assistantId,
         role: 'assistant',
-        content: response.answer,
+        content: '',
+        fullContent: response.answer,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMessage]);
+      startTypewriter(assistantId, response.answer);
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'AI request failed';
       const assistantMessage: Message = {
