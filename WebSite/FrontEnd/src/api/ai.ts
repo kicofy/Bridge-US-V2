@@ -60,4 +60,7 @@ export async function askQuestionStream(
     const text = decoder.decode(value, { stream: true });
     if (text) onDelta(text);
   }
+  // flush any remaining buffered bytes
+  const tail = decoder.decode();
+  if (tail) onDelta(tail);
 }
