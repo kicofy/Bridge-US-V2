@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Shield } from 'lucide-react';
 import { Button } from '../ui/button';
 import { listAuditLogs, AuditLogResponse } from '../../api/admin';
+import { listAuditLogs, AuditLogResponse } from '../../api/admin';
 
 export function AuditLog() {
   const [logs, setLogs] = useState<AuditLogResponse[]>([]);
@@ -16,6 +17,19 @@ export function AuditLog() {
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load audit logs'))
       .finally(() => setLoading(false));
   }, []);
+
+  const formatDate = (value?: string | null) => {
+    if (!value) return '-';
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString();
+  };
+
+  const renderTarget = (log: AuditLogResponse) => {
+    if (log.target_type === 'user') {
+      return log.target_email ?? log.target_id;
+    }
+    return `${log.target_type} • ${log.target_id}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -65,11 +79,11 @@ export function AuditLog() {
             <tbody className="divide-y">
               {logs.map((log) => (
                 <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-6 py-4 text-sm">{log.created_at}</td>
-                  <td className="px-6 py-4 text-sm">{log.admin_id}</td>
+                  <td className="px-6 py-4 text-sm">{formatDate(log.created_at)}</td>
+                  <td className="px-6 py-4 text-sm">{log.moderator_email ?? log.moderator_id}</td>
                   <td className="px-6 py-4 text-sm font-medium">{log.action}</td>
                   <td className="px-6 py-4 text-sm">
-                    {log.target_type} • {log.target_id}
+                    {renderTarget(log)}
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{log.reason ?? '-'}</td>
                 </tr>

@@ -60,7 +60,32 @@ async def audit_logs(
     db: AsyncSession = Depends(get_db),
 ):
     items = await list_audit_logs(db, limit, offset)
-    return [AuditLogResponse(**item.__dict__) for item in items]
+    moderator_ids = {item.moderator_id for item in items}
+    target_user_ids = {item.target_id for item in items if item.target_type == "user"}
+    user_ids = moderator_ids | target_user_ids
+    users_by_id: dict[str, User] = {}
+    if user_ids:
+        result = await db.execute(select(User).where(User.id.in_(user_ids)))
+        users_by_id = {user.id: user for user in result.scalars().all()}
+
+    responses: list[AuditLogResponse] = []
+    for item in items:
+        moderator = users_by_id.get(item.moderator_id)
+        target = users_by_id.get(item.target_id) if item.target_type == "user" else None
+        responses.append(
+            AuditLogResponse(
+                id=item.id,
+                moderator_id=item.moderator_id,
+                moderator_email=moderator.email if moderator else None,
+                target_type=item.target_type,
+                target_id=item.target_id,
+                target_email=target.email if target else None,
+                action=item.action,
+                reason=getattr(item, "reason", None),
+                created_at=item.created_at,
+            )
+        )
+    return responses
 
 
 @router.post("/users/{user_id}/ban")
