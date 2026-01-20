@@ -33,8 +33,6 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLElement | null>(null);
   const lastValueRef = useRef<string>('');
-  const composingRef = useRef(false);
-  const pendingChangeRef = useRef(false);
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -98,42 +96,9 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
     };
 
     const handleChange = () => {
-      if (composingRef.current) {
-        pendingChangeRef.current = true;
-        return;
-      }
       const html = inputRef.current?.value ?? '';
       lastValueRef.current = html;
       onChange(html);
-      pendingChangeRef.current = false;
-    };
-
-    const handleCompositionStart = () => {
-      composingRef.current = true;
-    };
-
-    const handleCompositionEnd = () => {
-      composingRef.current = false;
-      if (pendingChangeRef.current) {
-        requestAnimationFrame(() => handleChange());
-      }
-    };
-
-    const handleDocumentCompositionStart = (event: Event) => {
-      const target = event.target as Node | null;
-      if (target && editor.contains(target)) {
-        composingRef.current = true;
-      }
-    };
-
-    const handleDocumentCompositionEnd = (event: Event) => {
-      const target = event.target as Node | null;
-      if (target && editor.contains(target)) {
-        composingRef.current = false;
-        if (pendingChangeRef.current) {
-          requestAnimationFrame(() => handleChange());
-        }
-      }
     };
 
     const handleAttachmentAdd = async (event: Event) => {
@@ -201,44 +166,20 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
     editor.addEventListener('trix-file-accept', handleFileAccept as EventListener);
     editor.addEventListener('trix-change', handleChange);
     editor.addEventListener('trix-attachment-add', handleAttachmentAdd as EventListener);
-    editor.addEventListener('compositionstart', handleCompositionStart);
-    editor.addEventListener('compositionend', handleCompositionEnd);
-    document.addEventListener('compositionstart', handleDocumentCompositionStart, true);
-    document.addEventListener('compositionend', handleDocumentCompositionEnd, true);
     return () => {
       editor.removeEventListener('trix-file-accept', handleFileAccept as EventListener);
       editor.removeEventListener('trix-change', handleChange);
       editor.removeEventListener('trix-attachment-add', handleAttachmentAdd as EventListener);
-      editor.removeEventListener('compositionstart', handleCompositionStart);
-      editor.removeEventListener('compositionend', handleCompositionEnd);
-      document.removeEventListener('compositionstart', handleDocumentCompositionStart, true);
-      document.removeEventListener('compositionend', handleDocumentCompositionEnd, true);
     };
   }, [onChange]);
 
   useEffect(() => {
-    const editor = editorRef.current as (HTMLElement & { editor?: { loadHTML: (html: string) => void } }) | null;
     const input = inputRef.current;
-    if (!editor || !input) return;
-
-    const nextValue = value || '';
-    if (nextValue === lastValueRef.current) return;
-
-    if (input.value !== nextValue) {
-      input.value = nextValue;
+    if (!input) return;
+    if (value !== lastValueRef.current) {
+      input.value = value || '';
+      lastValueRef.current = value || '';
     }
-
-    const applyValue = () => {
-      editor.editor?.loadHTML(nextValue);
-      lastValueRef.current = nextValue;
-    };
-
-    if (editor.editor) {
-      applyValue();
-      return;
-    }
-
-    editor.addEventListener('trix-initialize', applyValue, { once: true });
   }, [value]);
 
   return (
