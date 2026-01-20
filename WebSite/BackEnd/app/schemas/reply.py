@@ -16,6 +16,7 @@ class ReplyResponse(BaseModel):
     id: str
     post_id: str
     author_id: str
+    author_name: str | None = None
     content: str
     helpful_count: int = 0
     status: str

@@ -11,8 +11,9 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE_URL =
+const RAW_API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? 'https://api.bridge-us.org/api';
+const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, '');
 
 let refreshPromise: Promise<boolean> | null = null;
 

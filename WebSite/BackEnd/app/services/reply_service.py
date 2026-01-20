@@ -53,14 +53,13 @@ async def create_reply(
     db.add(reply)
     await db.commit()
     await db.refresh(reply)
-    if post.author_id != author_id:
-        await create_notification(
-            db,
-            post.author_id,
-            "reply_created",
-            {"post_id": post.id, "reply_id": reply.id},
-            dedupe_key=f"reply:{reply.id}",
-        )
+    await create_notification(
+        db,
+        post.author_id,
+        "reply_created",
+        {"post_id": post.id, "reply_id": reply.id},
+        dedupe_key=f"reply:{reply.id}",
+    )
     return reply
 
 
