@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import 'trix';
 import 'trix/dist/trix.css';
+import { uploadImage } from '../api/files';
 
 interface TrixEditorProps {
   value: string;
@@ -24,9 +25,35 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
       onChange(html);
     };
 
+    const handleAttachmentAdd = async (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      const attachment = detail?.attachment;
+      const file = attachment?.file as File | undefined;
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        return;
+      }
+
+      try {
+        const { url } = await uploadImage(file);
+        if (typeof attachment?.setAttributes === 'function') {
+          attachment.setAttributes({
+            url,
+            href: url,
+          });
+        }
+      } catch {
+        if (typeof attachment?.remove === 'function') {
+          attachment.remove();
+        }
+      }
+    };
+
     editor.addEventListener('trix-change', handleChange);
+    editor.addEventListener('trix-attachment-add', handleAttachmentAdd as EventListener);
     return () => {
       editor.removeEventListener('trix-change', handleChange);
+      editor.removeEventListener('trix-attachment-add', handleAttachmentAdd as EventListener);
     };
   }, [onChange]);
 
