@@ -36,7 +36,6 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
 
   const suggestedQuestions = language === 'en' ? [
     'What documents do I need for F-1 visa extension?',
@@ -53,12 +52,15 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
   ];
 
   useEffect(() => {
-    // Wait for DOM paint to ensure RichTextDisplay height is measured before scrolling
+    // Only auto-scroll when new内容溢出当前可视区域，避免滚动整个页面
+    const viewport = viewportRef.current;
+    if (!viewport) return;
     requestAnimationFrame(() => {
-      if (bottomRef.current) {
-        bottomRef.current.scrollIntoView({ behavior: 'smooth' });
-      } else if (viewportRef.current) {
-        viewportRef.current.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'smooth' });
+      const { scrollTop, clientHeight, scrollHeight } = viewport;
+      const distanceToBottom = scrollHeight - clientHeight - scrollTop;
+      // 若距离底部仍有内容（例如新增消息在可视外），才平滑滚动到底
+      if (distanceToBottom > 8) {
+        viewport.scrollTo({ top: scrollHeight, behavior: 'smooth' });
       }
     });
   }, [messages, isTyping]);
@@ -206,7 +208,6 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
                     </div>
                   </div>
                 ))}
-                <div ref={bottomRef} />
 
                 {/* Typing indicator */}
                 {isTyping && (
