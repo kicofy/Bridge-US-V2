@@ -4367,6 +4367,18 @@ html {
   margin: 1rem 0 0.5rem;
 }
 
+:is(.trix-content, trix-editor, .editorjs-content) h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0.9rem 0 0.45rem;
+}
+
+:is(.trix-content, trix-editor, .editorjs-content) h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0.75rem 0 0.4rem;
+}
+
 :is(.trix-content, trix-editor, .editorjs-content) p {
   margin: 0.5rem 0;
 }
@@ -4456,4 +4468,25 @@ html {
 .codex-editor .ce-block__content,
 .codex-editor .ce-toolbar__content {
   max-width: none;
+}
+
+.codex-editor .ce-header {
+  font-weight: 600;
+  margin: 0.9rem 0 0.45rem;
+}
+
+.codex-editor .ce-header[data-level="1"] {
+  font-size: 1.5rem;
+}
+
+.codex-editor .ce-header[data-level="2"] {
+  font-size: 1.25rem;
+}
+
+.codex-editor .ce-header[data-level="3"] {
+  font-size: 1.1rem;
+}
+
+.codex-editor .ce-header[data-level="4"] {
+  font-size: 1rem;
 }
