@@ -35,7 +35,7 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
 
   const suggestedQuestions = language === 'en' ? [
     'What documents do I need for F-1 visa extension?',
@@ -52,10 +52,11 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
   ];
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const el = viewportRef.current;
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, isTyping]);
 
   const handleSendMessage = async (content?: string) => {
     const messageContent = content || inputValue.trim();
@@ -126,7 +127,7 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
           {/* Chat area */}
           <div className="flex flex-col">
             {/* Messages */}
-            <ScrollArea ref={scrollRef} className="h-[500px] pr-4">
+            <ScrollArea viewportRef={viewportRef} className="h-[500px] pr-4">
               <div className="space-y-4">
                 {messages.map((message) => (
                   <div
