@@ -4350,60 +4350,60 @@ html {
 }
 
 /* Trix content styling for editor + display */
-:is(.trix-content, trix-editor) {
+:is(.trix-content, trix-editor, .editorjs-content) {
   line-height: 1.7;
   font-size: 1rem;
 }
 
-:is(.trix-content, trix-editor) h1 {
+:is(.trix-content, trix-editor, .editorjs-content) h1 {
   font-size: 1.5rem;
   font-weight: 600;
   margin: 1.25rem 0 0.75rem;
 }
 
-:is(.trix-content, trix-editor) h2 {
+:is(.trix-content, trix-editor, .editorjs-content) h2 {
   font-size: 1.25rem;
   font-weight: 600;
   margin: 1rem 0 0.5rem;
 }
 
-:is(.trix-content, trix-editor) p {
+:is(.trix-content, trix-editor, .editorjs-content) p {
   margin: 0.5rem 0;
 }
 
-:is(.trix-content, trix-editor) ul,
-:is(.trix-content, trix-editor) ol {
+:is(.trix-content, trix-editor, .editorjs-content) ul,
+:is(.trix-content, trix-editor, .editorjs-content) ol {
   margin: 0.75rem 0;
   padding-left: 1.5rem;
   list-style-position: outside;
 }
 
-:is(.trix-content, trix-editor) ul {
+:is(.trix-content, trix-editor, .editorjs-content) ul {
   list-style: disc;
 }
 
-:is(.trix-content, trix-editor) ol {
+:is(.trix-content, trix-editor, .editorjs-content) ol {
   list-style: decimal;
 }
 
-:is(.trix-content, trix-editor) ul ul {
+:is(.trix-content, trix-editor, .editorjs-content) ul ul {
   list-style: circle;
   margin-top: 0.35rem;
 }
 
-:is(.trix-content, trix-editor) ol ol {
+:is(.trix-content, trix-editor, .editorjs-content) ol ol {
   list-style: lower-alpha;
   margin-top: 0.35rem;
 }
 
-:is(.trix-content, trix-editor) blockquote {
+:is(.trix-content, trix-editor, .editorjs-content) blockquote {
   margin: 0.75rem 0;
   padding: 0.25rem 1rem;
   border-left: 3px solid var(--bridge-blue);
   background: var(--bridge-blue-light);
 }
 
-:is(.trix-content, trix-editor) pre {
+:is(.trix-content, trix-editor, .editorjs-content) pre {
   margin: 0.75rem 0;
   padding: 0.75rem 1rem;
   background: var(--muted);
@@ -4411,44 +4411,49 @@ html {
   overflow-x: auto;
 }
 
-:is(.trix-content, trix-editor) code {
+:is(.trix-content, trix-editor, .editorjs-content) code {
   font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
   background: var(--muted);
   padding: 0.1rem 0.25rem;
   border-radius: 0.35rem;
 }
 
-:is(.trix-content, trix-editor) a {
+:is(.trix-content, trix-editor, .editorjs-content) a {
   color: var(--bridge-blue);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
-:is(.trix-content, trix-editor) hr {
+:is(.trix-content, trix-editor, .editorjs-content) hr {
   margin: 1rem 0;
   border-top: 1px solid var(--border);
 }
 
-:is(.trix-content, trix-editor) figure {
+:is(.trix-content, trix-editor, .editorjs-content) figure {
   margin: 0.75rem 0;
 }
 
-:is(.trix-content, trix-editor) img,
-:is(.trix-content, trix-editor) video {
+:is(.trix-content, trix-editor, .editorjs-content) img,
+:is(.trix-content, trix-editor, .editorjs-content) video {
   max-width: 100%;
   height: auto;
   border-radius: 0.75rem;
 }
 
-:is(.trix-content, trix-editor) table {
+:is(.trix-content, trix-editor, .editorjs-content) table {
   width: 100%;
   border-collapse: collapse;
   margin: 0.75rem 0;
 }
 
-:is(.trix-content, trix-editor) th,
-:is(.trix-content, trix-editor) td {
+:is(.trix-content, trix-editor, .editorjs-content) th,
+:is(.trix-content, trix-editor, .editorjs-content) td {
   border: 1px solid var(--border);
   padding: 0.5rem 0.75rem;
   text-align: left;
+}
+
+.codex-editor .ce-block__content,
+.codex-editor .ce-toolbar__content {
+  max-width: none;
 }

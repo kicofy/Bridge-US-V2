@@ -216,11 +216,7 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
               </label>
             </div>
 
-            <EditorJsEditor
-              value={content}
-              onChange={setContent}
-              placeholder={t('createPost.contentPlaceholder')}
-            />
+            <EditorJsEditor value={content} onChange={setContent} />
 
             <p className="text-xs text-muted-foreground">
               {t('createPost.contentCount', { count: content.length })}

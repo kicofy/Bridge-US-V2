@@ -248,7 +248,7 @@ export function RichTextDisplay({ content, className = '' }: RichTextDisplayProp
   if (isHtml) {
     return (
       <div
-        className={`trix-content max-w-none whitespace-pre-wrap break-words leading-relaxed ${className}`}
+        className={`editorjs-content trix-content max-w-none whitespace-pre-wrap break-words leading-relaxed ${className}`}
         dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
       />
     );
