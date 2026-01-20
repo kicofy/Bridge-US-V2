@@ -11,6 +11,7 @@ interface RichTextEditorProps {
 
 export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const selectionRef = useRef<Range | null>(null);
   const [showImageInput, setShowImageInput] = useState(false);
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
@@ -40,7 +41,23 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
     onChange(editor.innerHTML);
   };
 
+  const saveSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    selectionRef.current = selection.getRangeAt(0);
+  };
+
+  const restoreSelection = () => {
+    const selection = window.getSelection();
+    const range = selectionRef.current;
+    if (!selection || !range) return;
+    selection.removeAllRanges();
+    selection.addRange(range);
+  };
+
   const execCommand = (command: string, valueArg?: string) => {
+    editorRef.current?.focus();
+    restoreSelection();
     document.execCommand(command, false, valueArg);
     emitChange();
   };
@@ -88,6 +105,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="sm"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => execCommand('bold')}
           className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-background"
           title="Bold"
@@ -98,6 +116,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="sm"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => execCommand('italic')}
           className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-background"
           title="Italic"
@@ -108,7 +127,8 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => execCommand('formatBlock', 'h2')}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => execCommand('formatBlock', '<h2>')}
           className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-background"
           title="Heading"
         >
@@ -119,6 +139,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="sm"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => execCommand('insertUnorderedList')}
           className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-background"
           title="Bullet List"
@@ -129,6 +150,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="sm"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => execCommand('insertOrderedList')}
           className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-background"
           title="Numbered List"
@@ -140,6 +162,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="sm"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => setShowLinkInput(!showLinkInput)}
           className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-background"
           title="Insert Link"
@@ -150,6 +173,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="sm"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => setShowImageInput(!showImageInput)}
           className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-background"
           title="Insert Image"
@@ -284,6 +308,8 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           contentEditable
           suppressContentEditableWarning
           onInput={emitChange}
+          onKeyUp={saveSelection}
+          onMouseUp={saveSelection}
           onBlur={emitChange}
         />
       </div>
