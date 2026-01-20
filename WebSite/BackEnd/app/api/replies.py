@@ -23,6 +23,27 @@ from app.services.reply_service import (
 
 router = APIRouter(prefix="/replies", tags=["replies"])
 
+def _fallback_name(display_name: str | None, email: str | None, user_id: str) -> str:
+    if display_name and display_name.strip():
+        return display_name
+    if email and "@" in email:
+        return email.split("@", 1)[0]
+    return f"User {user_id[:6]}"
+
+
+async def _resolve_author_names(db: AsyncSession, author_ids: set[str]) -> dict[str, str]:
+    if not author_ids:
+        return {}
+    result = await db.execute(
+        select(User.id, Profile.display_name, User.email)
+        .outerjoin(Profile, Profile.user_id == User.id)
+        .where(User.id.in_(author_ids))
+    )
+    return {
+        user_id: _fallback_name(display_name, email, user_id)
+        for user_id, display_name, email in result.all()
+    }
+
 
 @router.get("", response_model=list[ReplyResponse])
 async def get_replies(
@@ -40,13 +61,7 @@ async def get_replies(
         if not user or (user.id != post.author_id and user.role != "admin"):
             raise AppError(code="post_not_found", message="Post not found", status_code=404)
     replies = await list_replies(db, post_id, limit, offset)
-    author_ids = {item.author_id for item in replies}
-    author_map: dict[str, str | None] = {}
-    if author_ids:
-        result = await db.execute(
-            select(Profile.user_id, Profile.display_name).where(Profile.user_id.in_(author_ids))
-        )
-        author_map = {user_id: display_name for user_id, display_name in result.all()}
+    author_map = await _resolve_author_names(db, {item.author_id for item in replies})
     return [
         ReplyResponse(
             id=item.id,
@@ -72,13 +87,7 @@ async def get_all_replies(
     db: AsyncSession = Depends(get_db),
 ):
     replies = await list_all_replies(db, limit, offset, status)
-    author_ids = {item.author_id for item in replies}
-    author_map: dict[str, str | None] = {}
-    if author_ids:
-        result = await db.execute(
-            select(Profile.user_id, Profile.display_name).where(Profile.user_id.in_(author_ids))
-        )
-        author_map = {user_id: display_name for user_id, display_name in result.all()}
+    author_map = await _resolve_author_names(db, {item.author_id for item in replies})
     return [
         ReplyResponse(
             id=item.id,
@@ -103,13 +112,7 @@ async def get_my_replies(
     db: AsyncSession = Depends(get_db),
 ):
     replies = await list_user_replies(db, user.id, limit, offset)
-    author_ids = {item.author_id for item in replies}
-    author_map: dict[str, str | None] = {}
-    if author_ids:
-        result = await db.execute(
-            select(Profile.user_id, Profile.display_name).where(Profile.user_id.in_(author_ids))
-        )
-        author_map = {user_id: display_name for user_id, display_name in result.all()}
+    author_map = await _resolve_author_names(db, {item.author_id for item in replies})
     return [
         ReplyResponse(
             id=item.id,
@@ -134,10 +137,8 @@ async def create(
     db: AsyncSession = Depends(get_db),
 ):
     reply = await create_reply(db, post_id, user.id, payload, is_admin=user.role == "admin")
-    author_result = await db.execute(
-        select(Profile.display_name).where(Profile.user_id == reply.author_id)
-    )
-    author_name = author_result.scalar_one_or_none()
+    author_map = await _resolve_author_names(db, {reply.author_id})
+    author_name = author_map.get(reply.author_id)
     return ReplyResponse(
         id=reply.id,
         post_id=reply.post_id,
@@ -159,10 +160,8 @@ async def update(
     db: AsyncSession = Depends(get_db),
 ):
     reply = await update_reply(db, reply_id, user.id, payload)
-    author_result = await db.execute(
-        select(Profile.display_name).where(Profile.user_id == reply.author_id)
-    )
-    author_name = author_result.scalar_one_or_none()
+    author_map = await _resolve_author_names(db, {reply.author_id})
+    author_name = author_map.get(reply.author_id)
     return ReplyResponse(
         id=reply.id,
         post_id=reply.post_id,
@@ -193,10 +192,8 @@ async def admin_hide(
     db: AsyncSession = Depends(get_db),
 ):
     reply = await admin_hide_reply(db, reply_id)
-    author_result = await db.execute(
-        select(Profile.display_name).where(Profile.user_id == reply.author_id)
-    )
-    author_name = author_result.scalar_one_or_none()
+    author_map = await _resolve_author_names(db, {reply.author_id})
+    author_name = author_map.get(reply.author_id)
     return ReplyResponse(
         id=reply.id,
         post_id=reply.post_id,
@@ -217,10 +214,8 @@ async def admin_restore(
     db: AsyncSession = Depends(get_db),
 ):
     reply = await admin_restore_reply(db, reply_id)
-    author_result = await db.execute(
-        select(Profile.display_name).where(Profile.user_id == reply.author_id)
-    )
-    author_name = author_result.scalar_one_or_none()
+    author_map = await _resolve_author_names(db, {reply.author_id})
+    author_name = author_map.get(reply.author_id)
     return ReplyResponse(
         id=reply.id,
         post_id=reply.post_id,
