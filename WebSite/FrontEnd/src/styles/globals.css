@@ -193,6 +193,100 @@
   }
 }
 
+@layer base {
+  .trix-content {
+    line-height: 1.7;
+    font-size: 1rem;
+  }
+
+  .trix-content h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 1.25rem 0 0.75rem;
+  }
+
+  .trix-content h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 1rem 0 0.5rem;
+  }
+
+  .trix-content p {
+    margin: 0.5rem 0;
+  }
+
+  .trix-content ul,
+  .trix-content ol {
+    margin: 0.75rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .trix-content ul {
+    list-style: disc;
+  }
+
+  .trix-content ol {
+    list-style: decimal;
+  }
+
+  .trix-content blockquote {
+    margin: 0.75rem 0;
+    padding: 0.25rem 1rem;
+    border-left: 3px solid var(--bridge-blue);
+    background: var(--bridge-blue-light);
+  }
+
+  .trix-content pre {
+    margin: 0.75rem 0;
+    padding: 0.75rem 1rem;
+    background: var(--muted);
+    border-radius: 0.75rem;
+    overflow-x: auto;
+  }
+
+  .trix-content code {
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+    background: var(--muted);
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.35rem;
+  }
+
+  .trix-content a {
+    color: var(--bridge-blue);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .trix-content hr {
+    margin: 1rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .trix-content figure {
+    margin: 0.75rem 0;
+  }
+
+  .trix-content img,
+  .trix-content video {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.75rem;
+  }
+
+  .trix-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0;
+  }
+
+  .trix-content th,
+  .trix-content td {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+}
+
 html {
   font-size: var(--font-size);
   scrollbar-gutter: stable;

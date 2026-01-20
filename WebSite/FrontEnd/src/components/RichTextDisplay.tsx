@@ -222,6 +222,10 @@ export function RichTextDisplay({ content, className = '' }: RichTextDisplayProp
       const doc = new DOMParser().parseFromString(content, 'text/html');
       const disallowed = doc.querySelectorAll('script, style');
       disallowed.forEach((node) => node.remove());
+      doc.querySelectorAll('a[href]').forEach((node) => {
+        node.setAttribute('target', '_blank');
+        node.setAttribute('rel', 'noopener noreferrer');
+      });
       doc.querySelectorAll('*').forEach((node) => {
         [...node.attributes].forEach((attr) => {
           const name = attr.name.toLowerCase();
@@ -244,7 +248,7 @@ export function RichTextDisplay({ content, className = '' }: RichTextDisplayProp
   if (isHtml) {
     return (
       <div
-        className={`prose prose-sm sm:prose max-w-none whitespace-pre-wrap break-words leading-relaxed ${className}`}
+        className={`trix-content max-w-none whitespace-pre-wrap break-words leading-relaxed ${className}`}
         dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
       />
     );
