@@ -4475,18 +4475,18 @@ html {
   margin: 0.9rem 0 0.45rem;
 }
 
-.codex-editor .ce-header[data-level="1"] {
+.codex-editor h1.ce-header {
   font-size: 1.5rem;
 }
 
-.codex-editor .ce-header[data-level="2"] {
+.codex-editor h2.ce-header {
   font-size: 1.25rem;
 }
 
-.codex-editor .ce-header[data-level="3"] {
+.codex-editor h3.ce-header {
   font-size: 1.1rem;
 }
 
-.codex-editor .ce-header[data-level="4"] {
+.codex-editor h4.ce-header {
   font-size: 1rem;
 }
