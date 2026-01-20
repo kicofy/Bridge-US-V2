@@ -34,6 +34,7 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
   const editorRef = useRef<HTMLElement | null>(null);
   const lastValueRef = useRef<string>('');
   const composingRef = useRef(false);
+  const pendingChangeRef = useRef(false);
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -98,11 +99,13 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
 
     const handleChange = () => {
       if (composingRef.current) {
+        pendingChangeRef.current = true;
         return;
       }
       const html = inputRef.current?.value ?? '';
       lastValueRef.current = html;
       onChange(html);
+      pendingChangeRef.current = false;
     };
 
     const handleCompositionStart = () => {
@@ -111,7 +114,9 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
 
     const handleCompositionEnd = () => {
       composingRef.current = false;
-      requestAnimationFrame(() => handleChange());
+      if (pendingChangeRef.current) {
+        requestAnimationFrame(() => handleChange());
+      }
     };
 
     const handleDocumentCompositionStart = (event: Event) => {
@@ -125,7 +130,9 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
       const target = event.target as Node | null;
       if (target && editor.contains(target)) {
         composingRef.current = false;
-        requestAnimationFrame(() => handleChange());
+        if (pendingChangeRef.current) {
+          requestAnimationFrame(() => handleChange());
+        }
       }
     };
 
