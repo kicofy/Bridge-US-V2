@@ -8,7 +8,7 @@ from app.core.errors import AppError
 from app.models.models import Category, Post, PostTag, PostTranslation, Profile, Tag, User
 from app.services.notification_service import create_notification
 from app.schemas.post import PostCreateRequest, PostUpdateRequest
-from app.services.ai_service import translate_text
+from app.services.ai_service import translate_post
 from app.services.moderation_service import screen_post
 
 
@@ -44,7 +44,7 @@ async def create_post(db: AsyncSession, author_id: str, payload: PostCreateReque
     if payload.tags:
         await _apply_tags(db, post.id, payload.tags)
 
-    if payload.status == "published":
+    if payload.status != "draft":
         await screen_post(db, post, payload.title, payload.content)
         if post.status == "published":
             await _translate_missing(db, post.id, payload.language, payload.title, payload.content)
@@ -223,8 +223,7 @@ async def _translate_missing(
         exists = result.scalar_one_or_none()
         if exists is not None:
             continue
-        translated_title = translate_text(title, source_lang, lang)
-        translated_content = translate_text(content, source_lang, lang)
+        translated_title, translated_content = translate_post(title, content, source_lang, lang)
         db.add(
             PostTranslation(
                 post_id=post_id,

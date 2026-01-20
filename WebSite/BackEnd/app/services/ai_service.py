@@ -11,23 +11,42 @@ def _get_client() -> OpenAI:
 
 
 def translate_text(text: str, source_lang: str, target_lang: str) -> str:
+    title, content = translate_post("", text, source_lang, target_lang)
+    return content
+
+
+def translate_post(
+    title: str, content: str, source_lang: str, target_lang: str
+) -> tuple[str, str]:
     client = _get_client()
     prompt = (
-        f"Translate the following text from {source_lang} to {target_lang}. "
-        "Keep the meaning and tone. Output only the translated text."
+        f"Translate the following JSON from {source_lang} to {target_lang}. "
+        "Keep the meaning and tone. Return ONLY valid JSON with keys "
+        '"title" and "content".'
     )
+    payload = {"title": title, "content": content}
     response = _chat_complete(
         client,
         [
             {"role": "system", "content": "You are a precise translator."},
             {"role": "user", "content": prompt},
-            {"role": "user", "content": text},
+            {"role": "user", "content": str(payload)},
         ],
     )
     output_text = (response.choices[0].message.content or "").strip()
     if not output_text:
         raise AppError(code="ai_translation_failed", message="Translation failed", status_code=500)
-    return output_text
+    try:
+        import json
+
+        data = json.loads(output_text)
+        translated_title = (data.get("title") or "").strip()
+        translated_content = (data.get("content") or "").strip()
+        if not translated_content:
+            raise ValueError("empty content")
+        return translated_title, translated_content
+    except Exception:
+        raise AppError(code="ai_translation_failed", message="Translation failed", status_code=500)
 
 
 def moderate_text(title: str, content: str) -> dict:

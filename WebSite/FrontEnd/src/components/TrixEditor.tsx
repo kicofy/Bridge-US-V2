@@ -33,6 +33,7 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLElement | null>(null);
   const lastValueRef = useRef<string>('');
+  const composingRef = useRef(false);
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -41,7 +42,7 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
     const handleFileAccept = (event: Event) => {
       const file = (event as unknown as { file?: File }).file;
       if (!file) return;
-      if (!file.type.startsWith('image/')) {
+      if (!file.type || !file.type.startsWith('image/')) {
         event.preventDefault();
         console.warn('[Trix] Unsupported file type:', file.type);
         return;
@@ -96,16 +97,31 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
     };
 
     const handleChange = () => {
+      if (composingRef.current) {
+        return;
+      }
       const html = inputRef.current?.value ?? '';
       lastValueRef.current = html;
       onChange(html);
+    };
+
+    const handleCompositionStart = () => {
+      composingRef.current = true;
+    };
+
+    const handleCompositionEnd = () => {
+      composingRef.current = false;
+      handleChange();
     };
 
     const handleAttachmentAdd = async (event: Event) => {
       const attachment = (event as unknown as { attachment?: { file?: File } }).attachment;
       const file = attachment?.file;
       if (!file) return;
-      if (!file.type.startsWith('image/')) {
+      if (!file.type || !file.type.startsWith('image/')) {
+        if (typeof (attachment as any)?.remove === 'function') {
+          (attachment as any).remove();
+        }
         return;
       }
 
@@ -163,10 +179,14 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
     editor.addEventListener('trix-file-accept', handleFileAccept as EventListener);
     editor.addEventListener('trix-change', handleChange);
     editor.addEventListener('trix-attachment-add', handleAttachmentAdd as EventListener);
+    editor.addEventListener('compositionstart', handleCompositionStart);
+    editor.addEventListener('compositionend', handleCompositionEnd);
     return () => {
       editor.removeEventListener('trix-file-accept', handleFileAccept as EventListener);
       editor.removeEventListener('trix-change', handleChange);
       editor.removeEventListener('trix-attachment-add', handleAttachmentAdd as EventListener);
+      editor.removeEventListener('compositionstart', handleCompositionStart);
+      editor.removeEventListener('compositionend', handleCompositionEnd);
     };
   }, [onChange]);
 
