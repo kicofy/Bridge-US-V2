@@ -126,9 +126,19 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
             attachment.setUploadProgress(percent);
           }
         });
-        const resolvedUrl = /^https?:\/\//i.test(url)
-          ? url
-          : `${API_ORIGIN}${url.startsWith('/') ? url : `/${url}`}`;
+        let resolvedUrl = url;
+        if (/^https?:\/\//i.test(resolvedUrl)) {
+          try {
+            const parsed = new URL(resolvedUrl);
+            if (parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost') {
+              resolvedUrl = `${API_ORIGIN}${parsed.pathname}`;
+            }
+          } catch {
+            // ignore parse errors
+          }
+        } else {
+          resolvedUrl = `${API_ORIGIN}${resolvedUrl.startsWith('/') ? resolvedUrl : `/${resolvedUrl}`}`;
+        }
         if (typeof attachment?.setAttributes === 'function') {
           attachment.setAttributes({
             url: resolvedUrl,
