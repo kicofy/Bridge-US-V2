@@ -255,13 +255,16 @@ export function UserManagement() {
             </div>
             <div className="p-6 space-y-6">
               {/* User Info */}
-              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex flex-col md:flex-row gap-4">
                 <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-[var(--bridge-blue)] to-[var(--bridge-green)] flex items-center justify-center text-white text-3xl font-semibold">
                   {selectedUser.email.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <h4 className="text-2xl font-semibold">{selectedUser.email}</h4>
+                      {selectedDetail?.display_name && (
+                        <span className="text-sm text-muted-foreground">({selectedDetail.display_name})</span>
+                      )}
                     {getRoleBadge(selectedDetail?.role ?? selectedUser.role)}
                     <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(selectedDetail?.status ?? selectedUser.status)}`}>
                       {(selectedDetail?.status ?? selectedUser.status).charAt(0).toUpperCase() +
@@ -279,6 +282,9 @@ export function UserManagement() {
                     {selectedDetail?.last_login_at
                       ? format(new Date(selectedDetail.last_login_at), 'yyyy-MM-dd HH:mm')
                       : '—'}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Language: {selectedDetail?.language_preference ?? '—'}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button

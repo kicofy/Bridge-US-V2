@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
 from app.core.config import settings
-from app.models.models import Category, Post, PostTag, Reply, Tag, User, Report
+from app.models.models import Category, Post, PostTag, Reply, Tag, User, Report, Profile
 from app.services.audit_service import log_action
 from app.services.notification_service import create_notification
 
@@ -20,6 +20,9 @@ async def get_user_detail(db: AsyncSession, user_id: str) -> dict:
     user = result.scalar_one_or_none()
     if user is None:
         raise AppError(code="user_not_found", message="User not found", status_code=404)
+
+    profile_result = await db.execute(select(Profile).where(Profile.user_id == user_id))
+    profile = profile_result.scalar_one_or_none()
 
     post_count = await db.scalar(select(func.count()).select_from(Post).where(Post.author_id == user_id))
     reply_count = await db.scalar(select(func.count()).select_from(Reply).where(Reply.author_id == user_id))
@@ -44,6 +47,8 @@ async def get_user_detail(db: AsyncSession, user_id: str) -> dict:
         "status": user.status,
         "created_at": user.created_at,
         "last_login_at": user.last_login_at,
+        "display_name": profile.display_name if profile else None,
+        "language_preference": profile.language_preference if profile else None,
         "posts_count": int(post_count or 0),
         "replies_count": int(reply_count or 0),
         "reports_filed": int(reports_filed or 0),

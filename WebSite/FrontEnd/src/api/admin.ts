@@ -29,6 +29,10 @@ export type AdminUserDetail = AdminUser & {
   replies_count: number;
   reports_filed: number;
   reports_received: number;
+  display_name?: string | null;
+  language_preference?: string | null;
+  created_at?: string | null;
+  last_login_at?: string | null;
 };
 
 export async function getAdminUserDetail(userId: string) {

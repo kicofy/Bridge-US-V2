@@ -63,6 +63,7 @@ async def issue_tokens(db: AsyncSession, user_id: str) -> tuple[str, str]:
         expires_at=expires_at,
     )
     db.add(session)
+    user.last_login_at = datetime.now(timezone.utc)
     await db.commit()
     return access_token, refresh_token
 
