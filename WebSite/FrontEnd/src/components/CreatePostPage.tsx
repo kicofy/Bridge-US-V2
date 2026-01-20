@@ -50,8 +50,6 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
 
     if (!title.trim()) {
       newErrors.title = t('createPost.titleRequired');
-    } else if (title.trim().length < 10) {
-      newErrors.title = t('createPost.titleMin');
     }
 
     if (!category) {
@@ -61,8 +59,6 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
     const plainContent = stripRichText(content);
     if (!plainContent) {
       newErrors.content = t('createPost.contentRequired');
-    } else if (plainContent.length < 50) {
-      newErrors.content = t('createPost.contentMin');
     }
 
     setErrors(newErrors);

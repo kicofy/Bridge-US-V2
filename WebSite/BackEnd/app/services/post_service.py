@@ -44,11 +44,6 @@ async def create_post(db: AsyncSession, author_id: str, payload: PostCreateReque
     if payload.tags:
         await _apply_tags(db, post.id, payload.tags)
 
-    if payload.status != "draft":
-        await screen_post(db, post, payload.title, payload.content)
-        if post.status == "published":
-            await _translate_missing(db, post.id, payload.language, payload.title, payload.content)
-
     await db.commit()
     await db.refresh(post)
     return post
@@ -320,6 +315,8 @@ async def process_post_submission(db: AsyncSession, post_id: str) -> None:
     post = result.scalar_one_or_none()
     if post is None:
         raise AppError(code="post_not_found", message="Post not found", status_code=404)
+    if post.status == "draft":
+        return
     translation_result = await db.execute(
         select(PostTranslation).where(
             PostTranslation.post_id == post_id,
