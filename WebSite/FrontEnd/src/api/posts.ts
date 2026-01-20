@@ -6,6 +6,7 @@ export type PostResponse = {
   author_name?: string | null;
   category_id: string | null;
   status: string;
+  translation_status?: string | null;
   language: string;
   title: string;
   content: string;
@@ -60,7 +61,7 @@ export async function createPost(payload: {
   category_id?: string | null;
   tags: string[];
   language: string;
-  status: 'draft' | 'published';
+  status: 'draft' | 'published' | 'pending';
 }) {
   return apiFetch<PostResponse>('/posts', {
     method: 'POST',

@@ -18,6 +18,7 @@ export interface Post {
   createdAt?: string;
   notHelpfulCount?: number;
   status?: string;
+  translationStatus?: string;
   tags: string[];
   author: {
     id?: string;
@@ -36,9 +37,10 @@ interface PostCardProps {
   post: Post;
   onClick?: () => void;
   onAuthorClick?: (authorId: string, authorName: string) => void;
+  showStatus?: boolean;
 }
 
-export function PostCard({ post, onClick, onAuthorClick }: PostCardProps) {
+export function PostCard({ post, onClick, onAuthorClick, showStatus = false }: PostCardProps) {
   const { t } = useTranslation();
   const helpfulRatioText = getHelpfulnessRatioText(post.helpfulCount, post.notHelpfulCount ?? 0);
 
@@ -138,6 +140,16 @@ export function PostCard({ post, onClick, onAuthorClick }: PostCardProps) {
           {post.status === 'hidden' && (
             <Badge className="rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-xs">
               {t('posts.hidden')}
+            </Badge>
+          )}
+          {showStatus && post.status === 'pending' && (
+            <Badge className="rounded-full bg-blue-100 text-blue-700 border border-blue-200 text-xs">
+              {t('posts.pendingReview')}
+            </Badge>
+          )}
+          {showStatus && post.translationStatus === 'pending' && (
+            <Badge className="rounded-full bg-purple-100 text-purple-700 border border-purple-200 text-xs">
+              {t('posts.translating')}
             </Badge>
           )}
           {/* Translation toggle intentionally hidden per product requirement */}

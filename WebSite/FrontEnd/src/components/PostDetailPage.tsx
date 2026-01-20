@@ -335,13 +335,27 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
         </div>
 
         {/* Title and author controls */}
-        <div className="mb-4 flex items-start justify-between gap-4">
+          <div className="mb-4 flex items-start justify-between gap-4">
           <div className="flex-1">
             <h1 className="text-xl sm:text-2xl leading-snug">{activePost.title}</h1>
             {activePost.status === 'hidden' && (
               <div className="mt-2">
                 <Badge className="rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-xs">
                   {t('posts.hidden')}
+                </Badge>
+              </div>
+            )}
+            {activePost.status === 'pending' && (
+              <div className="mt-2">
+                <Badge className="rounded-full bg-blue-100 text-blue-700 border border-blue-200 text-xs">
+                  {t('posts.pendingReview')}
+                </Badge>
+              </div>
+            )}
+            {activePost.translationStatus === 'pending' && (
+              <div className="mt-2">
+                <Badge className="rounded-full bg-purple-100 text-purple-700 border border-purple-200 text-xs">
+                  {t('posts.translating')}
                 </Badge>
               </div>
             )}

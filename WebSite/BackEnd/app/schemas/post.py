@@ -26,6 +26,7 @@ class PostResponse(BaseModel):
     author_name: str | None = None
     category_id: str | None
     status: str
+    translation_status: str | None = None
     language: str
     title: str
     content: str

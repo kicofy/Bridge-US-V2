@@ -153,14 +153,8 @@ function AppShell() {
   };
 
   const handlePublishPost = (newPost: NewPost) => {
-    // In a real app, this would send the post to the backend
-    console.log('New post published:', newPost);
-    
-    // Show success message (could use toast notification)
-    alert('Your post has been published successfully!');
-    
-    // Navigate to home to see the new post
-    navigate('/');
+    console.log('New post submitted:', newPost);
+    navigate('/profile');
   };
 
   return (
@@ -423,6 +417,7 @@ function mapPostResponse(item: PostResponse): Post {
     createdAt: timestamp || undefined,
     notHelpfulCount: 0,
     status: item.status,
+    translationStatus: item.translation_status ?? undefined,
     tags: item.tags,
     author: {
       id: item.author_id,

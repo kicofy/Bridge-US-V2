@@ -49,7 +49,8 @@ export function SearchPage({
       content: item.content,
       createdAt: timestamp || undefined,
       notHelpfulCount: 0,
-        status: item.status,
+      status: item.status,
+      translationStatus: item.translation_status ?? undefined,
       tags: item.tags,
       author: {
         id: item.author_id,

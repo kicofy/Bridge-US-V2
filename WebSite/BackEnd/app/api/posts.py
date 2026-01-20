@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, Query
+import logging
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user, get_optional_user
-from app.core.database import get_db
+from app.core.database import SessionLocal, get_db
 from app.core.errors import AppError
 from app.models.models import User
 from app.schemas.post import PostCreateRequest, PostResponse, PostUpdateRequest
@@ -13,10 +15,12 @@ from app.services.post_service import (
     list_posts,
     list_user_posts,
     publish_post,
+    process_post_submission,
     set_post_visibility,
     update_post,
 )
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/posts", tags=["posts"])
 
@@ -68,10 +72,20 @@ async def get_item(
 async def create_item(
     payload: PostCreateRequest,
     user: User = Depends(get_current_user),
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
     post = await create_post(db, user.id, payload)
-    return await get_post(db, post.id, payload.language)
+
+    async def _process(post_id: str) -> None:
+        try:
+            async with SessionLocal() as session:
+                await process_post_submission(session, post_id)
+        except Exception:
+            logger.exception("Post background processing failed", extra={"post_id": post_id})
+
+    background_tasks.add_task(_process, post.id)
+    return await get_post(db, post.id, payload.language, user)
 
 
 @router.patch("/{post_id}", response_model=PostResponse)

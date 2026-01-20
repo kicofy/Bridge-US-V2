@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { ArrowLeft, Eye, Send, AlertCircle, X } from 'lucide-react';
+import { ArrowLeft, Send, AlertCircle, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { RichTextEditor } from './RichTextEditor';
-import { RichTextDisplay } from './RichTextDisplay';
 import { use3DHover } from '../hooks/use3DHover';
 import { createPost } from '../api/posts';
 import { ApiError } from '../api/client';
@@ -42,7 +41,6 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
   const [content, setContent] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState('');
-  const [showPreview, setShowPreview] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -93,7 +91,7 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
         content: normalizedContent,
         tags: normalizedTags,
         language,
-        status: 'published',
+        status: 'pending',
         category_id: null,
       });
       onPublish({
@@ -102,7 +100,6 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
         content: normalizedContent,
         tags,
       });
-      onBack();
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Failed to publish post';
       setSubmitError(message);
@@ -221,34 +218,13 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
             <label className="text-sm font-medium">
               {t('createPost.contentLabel')} <span className="text-red-600">*</span>
             </label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowPreview(!showPreview)}
-                className="gap-2 rounded-lg h-auto py-1.5 px-3 text-xs sm:text-sm"
-              >
-                <Eye className="h-4 w-4" />
-                {showPreview ? t('createPost.edit') : t('createPost.preview')}
-              </Button>
             </div>
 
-            {showPreview ? (
-              <div className="min-h-[250px] sm:min-h-[300px] rounded-xl border bg-muted/30 p-3 sm:p-4 overflow-x-auto">
-                {content ? (
-                  <RichTextDisplay content={content} />
-                ) : (
-                  <p className="text-muted-foreground text-center py-8 text-sm">
-                    {t('createPost.noContent')}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <RichTextEditor
-                value={content}
-                onChange={setContent}
-                placeholder={t('createPost.contentPlaceholder')}
-              />
-            )}
+            <RichTextEditor
+              value={content}
+              onChange={setContent}
+              placeholder={t('createPost.contentPlaceholder')}
+            />
 
             {errors.content && (
               <div className="flex items-center gap-2 text-xs text-red-600">

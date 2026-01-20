@@ -50,7 +50,8 @@ export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAu
       content: item.content,
       createdAt: rawTimestamp || undefined,
       notHelpfulCount: 0,
-        status: item.status,
+      status: item.status,
+      translationStatus: item.translation_status ?? undefined,
       tags: item.tags,
       author: {
         id: item.author_id,

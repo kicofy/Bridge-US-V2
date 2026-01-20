@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.errors import AppError
 from app.models.models import Category, Post, PostTag, PostTranslation, Profile, Tag, User
+from app.services.notification_service import create_notification
 from app.schemas.post import PostCreateRequest, PostUpdateRequest
 from app.services.ai_service import translate_text
 from app.services.moderation_service import screen_post
@@ -24,8 +25,8 @@ async def create_post(db: AsyncSession, author_id: str, payload: PostCreateReque
         author_id=author_id,
         category_id=payload.category_id,
         original_language=payload.language,
-        status=payload.status,
-        published_at=datetime.now(timezone.utc) if payload.status == "published" else None,
+        status="pending",
+        published_at=None,
     )
     db.add(post)
     await db.flush()
@@ -255,6 +256,7 @@ async def _to_response(db: AsyncSession, post: Post, language: str) -> dict:
         translation = fallback_result.scalar_one_or_none()
     if translation is None:
         raise AppError(code="post_translation_missing", message="Translation missing", status_code=500)
+    translation_status = "ready" if translation.language == language else "pending"
 
     tag_result = await db.execute(
         select(Tag.slug)
@@ -274,6 +276,7 @@ async def _to_response(db: AsyncSession, post: Post, language: str) -> dict:
         "author_name": author_name,
         "category_id": post.category_id,
         "status": post.status,
+        "translation_status": translation_status,
         "language": translation.language,
         "title": translation.title,
         "content": translation.content,
@@ -285,6 +288,34 @@ async def _to_response(db: AsyncSession, post: Post, language: str) -> dict:
         "published_at": post.published_at,
         "updated_at": post.updated_at,
     }
+
+
+async def process_post_submission(db: AsyncSession, post_id: str) -> None:
+    result = await db.execute(select(Post).where(Post.id == post_id))
+    post = result.scalar_one_or_none()
+    if post is None:
+        raise AppError(code="post_not_found", message="Post not found", status_code=404)
+    translation_result = await db.execute(
+        select(PostTranslation).where(
+            PostTranslation.post_id == post_id,
+            PostTranslation.language == post.original_language,
+        )
+    )
+    original = translation_result.scalar_one_or_none()
+    if original is None:
+        raise AppError(code="post_translation_missing", message="Original translation missing", status_code=500)
+
+    await screen_post(db, post, original.title, original.content)
+    if post.status == "published":
+        await _translate_missing(db, post.id, post.original_language, original.title, original.content)
+        await create_notification(
+            db,
+            post.author_id,
+            "post_published",
+            {"post_id": post.id},
+            dedupe_key=f"post_published:{post.id}",
+        )
+    await db.commit()
 
 
 async def _apply_tags(db: AsyncSession, post_id: str, tag_slugs: list[str]) -> None:

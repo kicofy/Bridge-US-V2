@@ -50,7 +50,9 @@
     "hide": "隐藏",
     "show": "展示",
     "delete": "删除",
-    "deleteConfirm": "确定要删除这篇帖子吗？"
+    "deleteConfirm": "确定要删除这篇帖子吗？",
+    "pendingReview": "审核中",
+    "translating": "翻译中"
   },
   "auth": {
     "invalidEmail": "请输入有效邮箱地址",

@@ -82,6 +82,7 @@ export function ProfilePage({ userId, onPostClick, onAuthorClick, onAdminAccess 
       createdAt: timestamp || undefined,
       notHelpfulCount: 0,
       status: item.status,
+      translationStatus: item.translation_status ?? undefined,
       tags: item.tags,
       author: {
         id: item.author_id,
@@ -99,6 +100,15 @@ export function ProfilePage({ userId, onPostClick, onAuthorClick, onAdminAccess 
 
   const userPosts = myPosts;
 
+  const fetchSelfPosts = async () => {
+    try {
+      const items = await listMyPosts({ language, limit: 20, offset: 0 });
+      setMyPosts(items.map(mapPostResponse));
+    } catch {
+      setMyPosts([]);
+    }
+  };
+
   useEffect(() => {
     setProfileError(null);
     if (isSelfView) {
@@ -112,9 +122,7 @@ export function ProfilePage({ userId, onPostClick, onAuthorClick, onAdminAccess 
           });
         })
         .catch((err) => setProfileError(err instanceof Error ? err.message : 'Failed to load profile'));
-      listMyPosts({ language, limit: 20, offset: 0 })
-        .then((items) => setMyPosts(items.map(mapPostResponse)))
-        .catch(() => setMyPosts([]));
+      fetchSelfPosts();
       listMyReplies({ limit: 20, offset: 0 })
         .then((items) => setMyReplies(items))
         .catch(() => setMyReplies([]));
@@ -134,6 +142,16 @@ export function ProfilePage({ userId, onPostClick, onAuthorClick, onAdminAccess 
       setMyReports([]);
     }
   }, [isSelfView, language, userId]);
+
+  useEffect(() => {
+    if (!isSelfView) {
+      return;
+    }
+    const interval = window.setInterval(() => {
+      fetchSelfPosts();
+    }, 10000);
+    return () => window.clearInterval(interval);
+  }, [isSelfView, language]);
 
   const handleProfileSave = async () => {
     const updated = await updateMyProfile({
@@ -499,6 +517,7 @@ export function ProfilePage({ userId, onPostClick, onAuthorClick, onAdminAccess 
                       key={post.id}
                       post={post}
                       onClick={() => onPostClick?.(post)}
+                      showStatus={isSelfView}
                     />
                   ))
                 ) : (
