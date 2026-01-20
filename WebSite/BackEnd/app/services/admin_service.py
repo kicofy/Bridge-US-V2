@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
 from app.core.config import settings
-from app.models.models import Category, Post, PostTag, Reply, Tag, User, Report, Profile
+from app.models.models import Category, Post, PostTag, Reply, Tag, User, Report, Profile, UserSession
 from app.services.audit_service import log_action
 from app.services.notification_service import create_notification
 
@@ -40,15 +40,26 @@ async def get_user_detail(db: AsyncSession, user_id: str) -> dict:
         )
     )
 
+    last_login = user.last_login_at
+    if last_login is None:
+        # fallback: latest session creation time
+        last_login = await db.scalar(
+            select(func.max(UserSession.created_at)).where(UserSession.user_id == user_id)
+        )
+
+    language_pref = profile.language_preference if profile else None
+    if not language_pref:
+        language_pref = settings.supported_languages.split(",")[0].strip() or None
+
     return {
         "id": user.id,
         "email": user.email,
         "role": user.role,
         "status": user.status,
         "created_at": user.created_at,
-        "last_login_at": user.last_login_at,
+        "last_login_at": last_login,
         "display_name": profile.display_name if profile else None,
-        "language_preference": profile.language_preference if profile else None,
+        "language_preference": language_pref,
         "posts_count": int(post_count or 0),
         "replies_count": int(reply_count or 0),
         "reports_filed": int(reports_filed or 0),
