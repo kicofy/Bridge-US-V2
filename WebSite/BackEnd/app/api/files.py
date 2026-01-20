@@ -16,7 +16,10 @@ router = APIRouter(prefix="/files", tags=["files"])
 
 
 def _build_public_url(request: Request, filename: str) -> str:
-    base_url = str(request.base_url).rstrip("/")
+    if settings.uploads_public_base:
+        base_url = settings.uploads_public_base.rstrip("/")
+    else:
+        base_url = str(request.base_url).rstrip("/")
     return f"{base_url}{settings.uploads_url}/{filename}"
 
 

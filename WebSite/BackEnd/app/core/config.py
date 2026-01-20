@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     ai_daily_limit: int = 0
     uploads_dir: str = "uploads"
     uploads_url: str = "/uploads"
+    uploads_public_base: str | None = None
     upload_max_mb: int = 5
     upload_allowed_types: str = "image/jpeg,image/png,image/webp,image/gif"
 
