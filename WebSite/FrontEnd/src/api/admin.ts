@@ -5,6 +5,8 @@ export type AdminUser = {
   email: string;
   role: string;
   status: string;
+  last_login_at?: string | null;
+  created_at?: string | null;
 };
 
 export type AdminMe = {
@@ -20,6 +22,17 @@ export async function listAdminUsers(limit = 20, offset = 0) {
     offset: String(offset),
   });
   return apiFetch<AdminUser[]>(`/admin/users?${query.toString()}`, { method: 'GET' });
+}
+
+export type AdminUserDetail = AdminUser & {
+  posts_count: number;
+  replies_count: number;
+  reports_filed: number;
+  reports_received: number;
+};
+
+export async function getAdminUserDetail(userId: string) {
+  return apiFetch<AdminUserDetail>(`/admin/users/${userId}`, { method: 'GET' });
 }
 
 export async function getAdminMe() {
@@ -41,6 +54,13 @@ export async function unbanUser(userId: string) {
 export async function makeAdmin(userId: string) {
   return apiFetch<{ status: string; user_id: string; user_role: string }>(`/admin/users/${userId}/make-admin`, {
     method: 'POST',
+  });
+}
+
+export async function setUserRole(userId: string, role: 'user' | 'admin') {
+  return apiFetch<{ status: string; user_id: string; user_role: string }>(`/admin/users/${userId}/set-role`, {
+    method: 'POST',
+    body: JSON.stringify({ role }),
   });
 }
 

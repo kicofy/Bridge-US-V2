@@ -12,11 +12,14 @@ from app.services.admin_service import (
     admin_set_reply_status,
     backfill_post_categories,
     list_users,
+    get_user_detail,
     set_user_role,
     set_user_status,
 )
 from app.services.admin_stats_service import get_admin_stats
 from app.services.audit_query_service import list_audit_logs
+from pydantic import BaseModel
+from sqlalchemy import select
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -34,6 +37,19 @@ async def users(
         {"id": user.id, "email": user.email, "role": user.role, "status": user.status}
         for user in items
     ]
+
+
+@router.get("/users/{user_id}")
+async def user_detail(
+    user_id: str,
+    _: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await get_user_detail(db, user_id)
+
+
+class SetRoleRequest(BaseModel):
+    role: str
 
 
 @router.get("/me")
@@ -115,6 +131,17 @@ async def make_admin(
     db: AsyncSession = Depends(get_db),
 ):
     user = await set_user_role(db, user_id, "admin", admin.id)
+    return {"status": "ok", "user_id": user.id, "user_role": user.role}
+
+
+@router.post("/users/{user_id}/set-role")
+async def set_role(
+    user_id: str,
+    payload: SetRoleRequest,
+    admin: User = Depends(get_root_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    user = await set_user_role(db, user_id, payload.role, admin.id)
     return {"status": "ok", "user_id": user.id, "user_role": user.role}
 
 

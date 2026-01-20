@@ -1,11 +1,11 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
 from app.core.config import settings
-from app.models.models import Category, Post, PostTag, Reply, Tag, User
+from app.models.models import Category, Post, PostTag, Reply, Tag, User, Report
 from app.services.audit_service import log_action
 from app.services.notification_service import create_notification
 
@@ -13,6 +13,42 @@ from app.services.notification_service import create_notification
 async def list_users(db: AsyncSession, limit: int, offset: int) -> list[User]:
     result = await db.execute(select(User).order_by(User.created_at.desc()).limit(limit).offset(offset))
     return list(result.scalars().all())
+
+
+async def get_user_detail(db: AsyncSession, user_id: str) -> dict:
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise AppError(code="user_not_found", message="User not found", status_code=404)
+
+    post_count = await db.scalar(select(func.count()).select_from(Post).where(Post.author_id == user_id))
+    reply_count = await db.scalar(select(func.count()).select_from(Reply).where(Reply.author_id == user_id))
+    reports_filed = await db.scalar(select(func.count()).select_from(Report).where(Report.reporter_id == user_id))
+
+    posts_subq = select(Post.id).where(Post.author_id == user_id).subquery()
+    replies_subq = select(Reply.id).where(Reply.author_id == user_id).subquery()
+
+    reports_on_posts = await db.scalar(
+        select(func.count()).select_from(Report).where(Report.target_type == "post", Report.target_id.in_(posts_subq))
+    )
+    reports_on_replies = await db.scalar(
+        select(func.count()).select_from(Report).where(
+            Report.target_type == "reply", Report.target_id.in_(replies_subq)
+        )
+    )
+
+    return {
+        "id": user.id,
+        "email": user.email,
+        "role": user.role,
+        "status": user.status,
+        "created_at": user.created_at,
+        "last_login_at": user.last_login_at,
+        "posts_count": int(post_count or 0),
+        "replies_count": int(reply_count or 0),
+        "reports_filed": int(reports_filed or 0),
+        "reports_received": int((reports_on_posts or 0) + (reports_on_replies or 0)),
+    }
 
 
 async def set_user_status(db: AsyncSession, user_id: str, status: str, admin_id: str) -> User:

@@ -1,7 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Filter, Ban, Eye, Shield } from 'lucide-react';
+import { Search, Filter, Ban, Eye, Shield, X } from 'lucide-react';
 import { Button } from '../ui/button';
-import { AdminMe, AdminUser, banUser, getAdminMe, listAdminUsers, makeAdmin, unbanUser } from '../../api/admin';
+import {
+  AdminMe,
+  AdminUser,
+  AdminUserDetail,
+  banUser,
+  getAdminMe,
+  getAdminUserDetail,
+  listAdminUsers,
+  makeAdmin,
+  setUserRole,
+  unbanUser,
+} from '../../api/admin';
+import { format } from 'date-fns';
 
 export function UserManagement() {
   const [adminInfo, setAdminInfo] = useState<AdminMe | null>(null);
@@ -9,8 +21,10 @@ export function UserManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'banned'>('all');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [selectedDetail, setSelectedDetail] = useState<AdminUserDetail | null>(null);
   const [showUserDetail, setShowUserDetail] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,6 +54,10 @@ export function UserManagement() {
       await banUser(user.id);
       setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, status: 'banned' } : item)));
     }
+    if (selectedUser?.id === user.id) {
+        setSelectedUser((prev) => (prev ? { ...prev, status: user.status === 'banned' ? 'active' : 'banned' } : prev));
+        setSelectedDetail((prev) => (prev ? { ...prev, status: user.status === 'banned' ? 'active' : 'banned' } : prev));
+    }
   };
 
   const canPromote = adminInfo?.role === 'admin' && adminInfo?.is_root;
@@ -54,7 +72,12 @@ export function UserManagement() {
 
   const handleViewDetails = (user: User) => {
     setSelectedUser(user);
+    setDetailLoading(true);
     setShowUserDetail(true);
+    getAdminUserDetail(user.id)
+      .then(setSelectedDetail)
+      .catch(() => setSelectedDetail(null))
+      .finally(() => setDetailLoading(false));
   };
 
   const getStatusColor = (status: AdminUser['status']) => {
@@ -177,13 +200,13 @@ export function UserManagement() {
                       >
                         <Ban className={`h-4 w-4 ${user.status === 'banned' ? 'text-red-600' : ''}`} />
                       </Button>
-                      {canPromote && user.role !== 'admin' && user.id !== adminInfo?.id && (
+                      {canPromote && user.id !== adminInfo?.id && (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleMakeAdmin(user)}
                           className="h-8 w-8 p-0 rounded-lg"
-                          title="Make admin"
+                          title={user.role === 'admin' ? 'Admin' : 'Make admin'}
                         >
                           <Shield className="h-4 w-4 text-purple-600" />
                         </Button>
@@ -215,9 +238,12 @@ export function UserManagement() {
       {/* User Detail Modal */}
       {showUserDetail && selectedUser && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xl font-semibold">User Details</h3>
+              <div>
+                <p className="text-xs text-muted-foreground">User Detail</p>
+                <h3 className="text-xl font-semibold">{selectedUser.email}</h3>
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
@@ -229,41 +255,83 @@ export function UserManagement() {
             </div>
             <div className="p-6 space-y-6">
               {/* User Info */}
-              <div className="flex items-start gap-4">
+              <div className="flex flex-col md:flex-row gap-4">
                 <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-[var(--bridge-blue)] to-[var(--bridge-green)] flex items-center justify-center text-white text-3xl font-semibold">
                   {selectedUser.email.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                <div className="flex-1 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h4 className="text-2xl font-semibold">{selectedUser.email}</h4>
-                  </div>
-                  <div className="flex gap-2">
-                    {getRoleBadge(selectedUser.role)}
-                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(selectedUser.status)}`}>
-                      {selectedUser.status.charAt(0).toUpperCase() + selectedUser.status.slice(1)}
+                    {getRoleBadge(selectedDetail?.role ?? selectedUser.role)}
+                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(selectedDetail?.status ?? selectedUser.status)}`}>
+                      {(selectedDetail?.status ?? selectedUser.status).charAt(0).toUpperCase() +
+                        (selectedDetail?.status ?? selectedUser.status).slice(1)}
                     </span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Created:{' '}
+                    {selectedDetail?.created_at
+                      ? format(new Date(selectedDetail.created_at), 'yyyy-MM-dd HH:mm')
+                      : '—'}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Last login:{' '}
+                    {selectedDetail?.last_login_at
+                      ? format(new Date(selectedDetail.last_login_at), 'yyyy-MM-dd HH:mm')
+                      : '—'}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl"
+                      onClick={() => handleBanToggle(selectedUser)}
+                    >
+                      <Ban className="h-4 w-4 mr-2" />
+                      {(selectedDetail?.status ?? selectedUser.status) === 'banned' ? 'Unban' : 'Ban'}
+                    </Button>
+                    {adminInfo?.is_root && selectedUser.id !== adminInfo.id && (
+                      <select
+                        value={selectedDetail?.role ?? selectedUser.role}
+                        onChange={async (e) => {
+                          const next = e.target.value as 'user' | 'admin';
+                          await setUserRole(selectedUser.id, next);
+                          setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? { ...u, role: next } : u)));
+                          setSelectedUser((prev) => (prev ? { ...prev, role: next } : prev));
+                          setSelectedDetail((prev) => (prev ? { ...prev, role: next } : prev));
+                        }}
+                        className="rounded-lg border px-3 py-2 text-sm"
+                      >
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1 rounded-xl"
-                  onClick={() => {
-                    handleBanToggle(selectedUser);
-                    setShowUserDetail(false);
-                  }}
-                >
-                  <Ban className="h-4 w-4 mr-2" />
-                  {selectedUser.status === 'banned' ? 'Unban' : 'Ban'}
-                </Button>
+              {/* Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <StatCard label="Posts" value={selectedDetail?.posts_count ?? '—'} />
+                <StatCard label="Replies" value={selectedDetail?.replies_count ?? '—'} />
+                <StatCard label="Reports filed" value={selectedDetail?.reports_filed ?? '—'} />
+                <StatCard label="Reports received" value={selectedDetail?.reports_received ?? '—'} />
               </div>
+
+              {detailLoading && <p className="text-sm text-muted-foreground">Loading details...</p>}
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-xl border bg-white p-4 shadow-sm">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-lg font-semibold mt-1">{value}</p>
     </div>
   );
 }
