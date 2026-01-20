@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
 import { getMyProfile, updateMyProfile } from '../api/profile';
 import { resetPassword } from '../api/auth';
-import { setLanguage } from '../i18n';
+import { setLanguage, LanguageCode } from '../i18n';
 
 export function SettingsPage() {
   const { t } = useTranslation();
@@ -17,7 +17,7 @@ export function SettingsPage() {
     display_name: '',
     location: '',
     bio: '',
-    language_preference: 'en' as 'en' | 'zh',
+    language_preference: 'en' as LanguageCode,
   });
   const [passwordForm, setPasswordForm] = useState({
     current_password: '',
@@ -38,7 +38,12 @@ export function SettingsPage() {
           display_name: data.display_name ?? '',
           location: data.location ?? '',
           bio: data.bio ?? '',
-          language_preference: data.language_preference === 'zh' ? 'zh' : 'en',
+          language_preference:
+            data.language_preference === 'zh'
+              ? 'zh'
+              : data.language_preference === 'ko'
+              ? 'ko'
+              : 'en',
         });
       })
       .catch((err) => setProfileMessage(err instanceof Error ? err.message : t('settings.loadFailed')))
@@ -59,7 +64,12 @@ export function SettingsPage() {
         display_name: updated.display_name ?? '',
         location: updated.location ?? '',
         bio: updated.bio ?? '',
-        language_preference: updated.language_preference === 'zh' ? 'zh' : 'en',
+          language_preference:
+            updated.language_preference === 'zh'
+              ? 'zh'
+              : updated.language_preference === 'ko'
+              ? 'ko'
+              : 'en',
       });
       setLanguage(profileForm.language_preference);
       if (user) {
@@ -143,13 +153,19 @@ export function SettingsPage() {
               onChange={(e) =>
                 setProfileForm((prev) => ({
                   ...prev,
-                  language_preference: e.target.value === 'zh' ? 'zh' : 'en',
+                  language_preference:
+                    e.target.value === 'zh'
+                      ? 'zh'
+                      : e.target.value === 'ko'
+                      ? 'ko'
+                      : 'en',
                 }))
               }
               className="h-10 w-full rounded-xl border bg-white px-3 text-sm"
             >
               <option value="en">{t('settings.languageEnglish')}</option>
               <option value="zh">{t('settings.languageChinese')}</option>
+              <option value="ko">{t('settings.languageKorean')}</option>
             </select>
             <p className="text-xs text-muted-foreground">{t('settings.languageHint')}</p>
           </div>

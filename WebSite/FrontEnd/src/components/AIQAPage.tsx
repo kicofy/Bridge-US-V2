@@ -39,19 +39,30 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const typingTimers = useRef<number[]>([]);
 
-  const suggestedQuestions = language === 'en' ? [
-    'What documents do I need for F-1 visa extension?',
-    'How to find affordable housing near campus?',
-    'What health insurance options are available?',
-    'How can I apply for OPT after graduation?',
-    'What are the best part-time job options on campus?',
-  ] : [
-    '申请F-1签证延期需要哪些文件？',
-    '如何找到校园附近的经济适用房？',
-    '有哪些医疗保险选项？',
-    '毕业后如何申请OPT？',
-    '校园内有哪些好的兼职工作机会？',
-  ];
+  const suggestedQuestions =
+    language === 'en'
+      ? [
+          'What documents do I need for F-1 visa extension?',
+          'How to find affordable housing near campus?',
+          'What health insurance options are available?',
+          'How can I apply for OPT after graduation?',
+          'What are the best part-time job options on campus?',
+        ]
+      : language === 'zh'
+      ? [
+          '申请F-1签证延期需要哪些文件？',
+          '如何找到校园附近的经济适用房？',
+          '有哪些医疗保险选项？',
+          '毕业后如何申请OPT？',
+          '校园内有哪些好的兼职工作机会？',
+        ]
+      : [
+          'F-1 비자 연장을 위해 어떤 서류가 필요한가요?',
+          '캠퍼스 근처 저렴한 주거를 찾는 방법은?',
+          '이용 가능한 건강보험 옵션은 무엇인가요?',
+          '졸업 후 OPT 신청은 어떻게 하나요?',
+          '캠퍼스에서 할 수 있는 좋은 파트타임 일자리는?',
+        ];
 
   useEffect(() => {
     // Only auto-scroll when new内容溢出当前可视区域，避免滚动整个页面
@@ -134,9 +145,12 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: language === 'en'
-          ? `Sorry, I couldn't complete that request. ${message}`
-          : `抱歉，未能完成请求。${message}`,
+        content:
+          language === 'en'
+            ? `Sorry, I couldn't complete that request. ${message}`
+            : language === 'zh'
+            ? `抱歉，未能完成请求。${message}`
+            : `죄송합니다. 요청을 처리하지 못했습니다. ${message}`,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMessage]);
@@ -223,7 +237,13 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Lightbulb className="h-3 w-3" />
-                            <span>{language === 'en' ? 'Related Trusted Posts' : '相关可信帖子'}</span>
+                            <span>
+                              {language === 'en'
+                                ? 'Related Trusted Posts'
+                                : language === 'zh'
+                                ? '相关可信帖子'
+                                : '관련 신뢰 글'}
+                            </span>
                           </div>
                           {message.relatedPosts.map((post, idx) => (
                             <button
@@ -240,10 +260,13 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
                       )}
 
                       <p className="px-2 text-xs text-muted-foreground">
-                        {message.timestamp.toLocaleTimeString(language === 'en' ? 'en-US' : 'zh-CN', {
+                        {message.timestamp.toLocaleTimeString(
+                          language === 'en' ? 'en-US' : language === 'zh' ? 'zh-CN' : 'ko-KR',
+                          {
                           hour: '2-digit',
                           minute: '2-digit',
-                        })}
+                          }
+                        )}
                       </p>
                     </div>
                   </div>

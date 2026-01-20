@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     refresh_token_days: int = 14
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"
-    supported_languages: str = "en,zh"
+    supported_languages: str = "en,zh,ko"
     moderation_review_threshold: int = 60
     moderation_reject_threshold: int = 85
     email_code_expire_minutes: int = 10

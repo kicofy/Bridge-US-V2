@@ -22,7 +22,7 @@ import { ApiError } from './api/client';
 import { getPost, PostResponse } from './api/posts';
 import { getMyProfile, updateMyProfile } from './api/profile';
 import { useAuthStore } from './store/auth';
-import { setLanguage } from './i18n';
+import { setLanguage, LanguageCode } from './i18n';
 import { useTranslation } from 'react-i18next';
 
 export default function App() {
@@ -38,7 +38,10 @@ function AppShell() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const language = i18n.language === 'zh' ? 'zh' : 'en';
+  const supportedLanguages: LanguageCode[] = ['en', 'zh', 'ko'];
+  const language: LanguageCode = supportedLanguages.includes(i18n.language as LanguageCode)
+    ? (i18n.language as LanguageCode)
+    : 'en';
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken));
@@ -65,7 +68,8 @@ function AppShell() {
   const backgroundClass = useMemo(() => 'aurora-bg', []);
 
   const handleLanguageToggle = () => {
-    const next = language === 'en' ? 'zh' : 'en';
+    const idx = supportedLanguages.indexOf(language);
+    const next = supportedLanguages[(idx + 1) % supportedLanguages.length];
     setLanguage(next);
     if (isAuthenticated) {
       updateMyProfile({ language_preference: next }).catch(() => {

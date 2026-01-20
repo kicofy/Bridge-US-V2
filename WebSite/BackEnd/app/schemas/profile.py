@@ -20,5 +20,6 @@ class ProfileUpdateRequest(BaseModel):
     school_level: str | None = None
     location: str | None = None
     bio: str | None = None
-    language_preference: str | None = Field(default=None, pattern="^(en|zh)$")
+    # Accept 2-8 lowercase letters; actual supported languages enforced server-side
+    language_preference: str | None = Field(default=None, pattern="^[a-z]{2,8}$")
 

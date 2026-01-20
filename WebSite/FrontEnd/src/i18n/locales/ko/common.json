@@ -186,9 +186,9 @@
     "bio": "Bio",
     "language": "Language",
     "languageHint": "Choose your preferred display language",
-    "languageEnglish": "English",
-    "languageChinese": "中文",
-    "languageKorean": "Korean",
+    "languageEnglish": "영어",
+    "languageChinese": "중국어",
+    "languageKorean": "한국어",
     "save": "Save",
     "saving": "Saving...",
     "profileSaved": "Profile updated",
@@ -251,4 +251,3 @@
     "visaStatus": "International Student"
   }
 }
-

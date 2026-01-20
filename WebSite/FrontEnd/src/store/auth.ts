@@ -1,13 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { LanguageCode } from '../i18n';
+
 export type AuthUser = {
   email: string;
   userId?: string;
   role?: 'user' | 'admin';
   isRoot?: boolean;
   displayName?: string;
-  languagePreference?: 'en' | 'zh';
+  languagePreference?: LanguageCode;
 };
 
 type AuthState = {

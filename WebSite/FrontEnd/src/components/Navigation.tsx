@@ -220,7 +220,9 @@ export function Navigation({
                 className="rounded-xl gap-2"
               >
                 <Globe className="h-4 w-4" />
-                <span className="hidden sm:inline text-sm">{language === 'en' ? 'EN' : '中文'}</span>
+                <span className="hidden sm:inline text-sm">
+                  {language === 'en' ? 'EN' : language === 'zh' ? '中文' : 'KO'}
+                </span>
               </Button>
             </div>
             {isAuthenticated && (

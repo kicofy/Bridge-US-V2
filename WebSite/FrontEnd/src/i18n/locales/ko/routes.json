@@ -1,0 +1,16 @@
+{
+  "home": {
+    "title": "All Posts",
+    "subtitle": "A trust-focused community for international students"
+  },
+  "search": {
+    "emptyTitle": "Start your search",
+    "emptyDesc": "Enter keywords to search for posts, topics, or information"
+  },
+  "ai": {
+    "knowledgeBase": "AI Knowledge Base",
+    "trustedPosts": "Trusted Posts",
+    "verifiedAnswers": "Verified Answers",
+    "expertContributors": "Expert Contributors"
+  }
+}

@@ -9,7 +9,7 @@ import { getMyProfile, updateMyProfile } from '../api/profile';
 import { ApiError } from '../api/client';
 import { useAuthStore } from '../store/auth';
 import { useTranslation } from 'react-i18next';
-import { setLanguage } from '../i18n';
+import { setLanguage, LanguageCode } from '../i18n';
 import { getJwtPayload } from '../utils/jwt';
 
 interface AuthPageProps {
@@ -20,7 +20,7 @@ type AuthView = 'login' | 'register' | 'forgot-password' | 'verify-email' | 'res
 
 export function AuthPage({ initialView = 'login' }: AuthPageProps) {
   const { t, i18n } = useTranslation();
-  const preferredLanguage = i18n.language === 'zh' ? 'zh' : 'en';
+  const preferredLanguage = (['zh', 'ko'].includes(i18n.language) ? (i18n.language as LanguageCode) : 'en') as LanguageCode;
   const navigate = useNavigate();
   const { setTokens, setUser } = useAuthStore();
   const [currentView, setCurrentView] = useState<AuthView>(initialView);
@@ -29,7 +29,7 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
-  const [registerLanguage, setRegisterLanguage] = useState<'en' | 'zh'>(preferredLanguage);
+  const [registerLanguage, setRegisterLanguage] = useState<LanguageCode>(preferredLanguage);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -179,7 +179,7 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
       const tokens = await loginUser({ email, password });
       setTokens(tokens.access_token, tokens.refresh_token);
       let displayName = email.split('@')[0];
-      let languagePreference: 'en' | 'zh' | undefined = undefined;
+      let languagePreference: LanguageCode | undefined = undefined;
       let role: 'user' | 'admin' = 'user';
       let isRoot = false;
       let userId: string | undefined = undefined;
@@ -187,7 +187,11 @@ export function AuthPage({ initialView = 'login' }: AuthPageProps) {
         const profile = await getMyProfile();
         displayName = profile.display_name || displayName;
         userId = profile.user_id;
-        if (profile.language_preference === 'en' || profile.language_preference === 'zh') {
+        if (
+          profile.language_preference === 'en' ||
+          profile.language_preference === 'zh' ||
+          profile.language_preference === 'ko'
+        ) {
           languagePreference = profile.language_preference;
           setLanguage(languagePreference);
         }
