@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
@@ -12,7 +13,7 @@ from app.schemas.ai import (
     AITranslateRequest,
     AITranslateResponse,
 )
-from app.services.ai_service import ask_question, moderate_text, translate_text
+from app.services.ai_service import ask_question, ask_question_stream, moderate_text, translate_text
 from app.services.ai_usage_service import enforce_ai_limit
 
 
@@ -28,6 +29,17 @@ async def ask(
     await enforce_ai_limit(db, user.id)
     answer = ask_question(payload.question)
     return AIAskResponse(answer=answer)
+
+
+@router.post("/ask-stream")
+async def ask_stream(
+    payload: AIAskRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await enforce_ai_limit(db, user.id)
+    stream = ask_question_stream(payload.question)
+    return StreamingResponse(stream, media_type="text/plain")
 
 
 @router.post("/translate", response_model=AITranslateResponse)
