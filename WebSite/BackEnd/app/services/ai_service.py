@@ -111,36 +111,6 @@ def ask_question(question: str) -> str:
     return output_text
 
 
-def ask_question_stream(question: str):
-    """
-    Stream AI answer chunk-by-chunk for real-time display.
-    """
-    client = _get_client()
-    messages = [
-        {"role": "system", "content": BRIDGEUS_SYSTEM_PROMPT},
-        {"role": "system", "content": BRIDGEUS_DEVELOPER_PROMPT},
-        {"role": "user", "content": question},
-    ]
-
-    def _stream_with_model(model: str):
-        stream = client.chat.completions.create(model=model, messages=messages, stream=True)
-        for chunk in stream:
-            delta = chunk.choices[0].delta.content or ""
-            if delta:
-                # SSE format to improve chunk boundary delivery
-                yield f"data: {delta}\n\n"
-
-    try:
-        yield from _stream_with_model(settings.openai_model)
-    except BadRequestError as exc:
-        message = str(exc)
-        fallback_model = "gpt-4o-mini"
-        if "invalid model" in message.lower() and settings.openai_model != fallback_model:
-            yield from _stream_with_model(fallback_model)
-            return
-        raise
-
-
 def _chat_complete(client: OpenAI, messages: list[dict]) -> object:
     model = settings.openai_model
     try:
