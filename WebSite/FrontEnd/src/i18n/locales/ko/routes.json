@@ -1,16 +1,16 @@
 {
   "home": {
-    "title": "All Posts",
-    "subtitle": "A trust-focused community for international students"
+    "title": "전체 게시글",
+    "subtitle": "유학생을 위한 신뢰 기반 커뮤니티"
   },
   "search": {
-    "emptyTitle": "Start your search",
-    "emptyDesc": "Enter keywords to search for posts, topics, or information"
+    "emptyTitle": "검색을 시작하세요",
+    "emptyDesc": "게시글/주제/정보를 찾을 키워드를 입력하세요"
   },
   "ai": {
-    "knowledgeBase": "AI Knowledge Base",
-    "trustedPosts": "Trusted Posts",
-    "verifiedAnswers": "Verified Answers",
-    "expertContributors": "Expert Contributors"
+    "knowledgeBase": "AI 지식 베이스",
+    "trustedPosts": "신뢰 게시글",
+    "verifiedAnswers": "검증된 답변",
+    "expertContributors": "기여 전문가"
   }
 }
