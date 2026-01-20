@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, Send, AlertCircle, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { RichTextEditor } from './RichTextEditor';
+import { TrixEditor } from './TrixEditor';
 import { use3DHover } from '../hooks/use3DHover';
 import { createPost } from '../api/posts';
 import { ApiError } from '../api/client';
@@ -220,7 +220,7 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
               </label>
             </div>
 
-            <RichTextEditor
+            <TrixEditor
               value={content}
               onChange={setContent}
               placeholder={t('createPost.contentPlaceholder')}

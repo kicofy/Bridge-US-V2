@@ -47,6 +47,7 @@
             "recharts": "^2.15.2",
             "sonner": "^2.0.3",
             "tailwind-merge": "*",
+            "trix": "^2.1.16",
             "vaul": "^1.1.2",
             "zustand": "^5.0.10"
       },
