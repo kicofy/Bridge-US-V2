@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_admin_user, get_current_user
 from app.core.database import get_db
-from app.models.models import PostTranslation, User
+from app.models.models import ModerationLog, PostTranslation, Profile, User
 from app.schemas.moderation import (
     AppealCreateRequest,
     AppealResponse,
@@ -142,10 +142,25 @@ async def get_pending_posts(
         result = await db.execute(select(User).where(User.id.in_(author_ids)))
         users_by_id = {user.id: user for user in result.scalars().all()}
 
+    profiles_by_id: dict[str, Profile] = {}
+    if author_ids:
+        result = await db.execute(select(Profile).where(Profile.user_id.in_(author_ids)))
+        profiles_by_id = {profile.user_id: profile for profile in result.scalars().all()}
+
     translations_by_post: dict[str, list[PostTranslation]] = {}
     result = await db.execute(select(PostTranslation).where(PostTranslation.post_id.in_(post_ids)))
     for translation in result.scalars().all():
         translations_by_post.setdefault(translation.post_id, []).append(translation)
+
+    logs_by_post: dict[str, ModerationLog] = {}
+    result = await db.execute(
+        select(ModerationLog)
+        .where(ModerationLog.target_type == "post", ModerationLog.target_id.in_(post_ids))
+        .order_by(ModerationLog.created_at.desc())
+    )
+    for log in result.scalars().all():
+        if log.target_id not in logs_by_post:
+            logs_by_post[log.target_id] = log
 
     response = []
     for post in posts:
@@ -155,15 +170,24 @@ async def get_pending_posts(
             translations[0] if translations else None,
         )
         author = users_by_id.get(post.author_id)
+        profile = profiles_by_id.get(post.author_id)
+        log = logs_by_post.get(post.id)
         response.append(
             {
                 "id": post.id,
                 "author_id": post.author_id,
                 "author_email": author.email if author else None,
+                "author_name": profile.display_name if profile else None,
+                "author_language": profile.language_preference if profile else None,
                 "status": post.status,
                 "created_at": post.created_at,
                 "original_language": post.original_language,
                 "title": selected.title if selected else None,
+                "content": selected.content if selected else None,
+                "moderation_reason": log.reason if log else None,
+                "moderation_labels": log.labels if log else None,
+                "moderation_decision": log.decision if log else None,
+                "moderation_score": log.risk_score if log else None,
             }
         )
     return response

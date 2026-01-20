@@ -47,8 +47,15 @@ export type PendingPost = {
   id: string;
   author_id: string;
   author_email?: string | null;
+  author_name?: string | null;
+  author_language?: string | null;
   title?: string | null;
+  content?: string | null;
   original_language?: string | null;
+  moderation_reason?: string | null;
+  moderation_labels?: string[] | null;
+  moderation_decision?: string | null;
+  moderation_score?: number | null;
   status: string;
   created_at?: string | null;
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle, XCircle, RefreshCcw } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
@@ -7,6 +7,7 @@ import {
   rejectPendingPost,
   PendingPost,
 } from '../../api/moderation';
+import { stripRichText } from '../../utils/text';
 
 export function ModerationQueue() {
   const [items, setItems] = useState<PendingPost[]>([]);
@@ -39,6 +40,16 @@ export function ModerationQueue() {
     setItems((prev) => prev.filter((item) => item.id !== postId));
   };
 
+  const contentPreview = (item: PendingPost) => {
+    if (!item.content) return '';
+    return stripRichText(item.content).slice(0, 180);
+  };
+
+  const labelText = (labels: PendingPost['moderation_labels']) => {
+    if (!labels || labels.length === 0) return '—';
+    return labels.join(', ');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -66,13 +77,19 @@ export function ModerationQueue() {
                   Author
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Author Lang
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Language
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Created
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Reason
+                  AI Reason
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Labels
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Actions
@@ -85,13 +102,26 @@ export function ModerationQueue() {
                   <td className="px-6 py-4">
                     <div className="max-w-md">
                       <p className="font-medium line-clamp-2">{item.title || 'Untitled post'}</p>
+                      {item.content && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {contentPreview(item)}
+                        </p>
+                      )}
                       <p className="text-xs text-muted-foreground mt-1">{item.id}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm">
-                      <p className="font-medium">{item.author_email || item.author_id}</p>
+                      <p className="font-medium">{item.author_name || item.author_email || item.author_id}</p>
+                      {item.author_email && (
+                        <p className="text-xs text-muted-foreground">{item.author_email}</p>
+                      )}
                     </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="px-2 py-1 text-xs font-medium rounded-lg bg-muted text-muted-foreground">
+                      {item.author_language || '—'}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-2 py-1 text-xs font-medium rounded-lg bg-blue-100 text-blue-700">
@@ -102,12 +132,12 @@ export function ModerationQueue() {
                     {item.created_at ? new Date(item.created_at).toLocaleString() : '—'}
                   </td>
                   <td className="px-6 py-4">
-                    <input
-                      value={reasonById[item.id] ?? ''}
-                      onChange={(e) => setReasonById((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                      placeholder="Optional reason"
-                      className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--bridge-blue)]"
-                    />
+                    <div className="text-sm text-muted-foreground">
+                      {item.moderation_reason || '—'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground">
+                    {labelText(item.moderation_labels)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -131,19 +161,25 @@ export function ModerationQueue() {
                         Reject
                       </Button>
                     </div>
+                    <input
+                      value={reasonById[item.id] ?? ''}
+                      onChange={(e) => setReasonById((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                      placeholder="Optional decision reason"
+                      className="mt-2 w-full rounded-lg border px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--bridge-blue)]"
+                    />
                   </td>
                 </tr>
               ))}
               {items.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
                     No pending posts
                   </td>
                 </tr>
               )}
               {loading && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
                     Loading queue...
                   </td>
                 </tr>
