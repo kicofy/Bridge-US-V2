@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Shield } from 'lucide-react';
 import { Button } from '../ui/button';
 import { listAuditLogs, AuditLogResponse } from '../../api/admin';
-import { listAuditLogs, AuditLogResponse } from '../../api/admin';
 
 export function AuditLog() {
   const [logs, setLogs] = useState<AuditLogResponse[]>([]);
