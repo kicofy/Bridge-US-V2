@@ -39,7 +39,15 @@ async def ask_stream(
 ):
     await enforce_ai_limit(db, user.id)
     stream = ask_question_stream(payload.question)
-    return StreamingResponse(stream, media_type="text/plain")
+    # 禁用代理/NGINX 缓冲，确保浏览器能实时收到分块
+    return StreamingResponse(
+        stream,
+        media_type="text/plain",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.post("/translate", response_model=AITranslateResponse)
