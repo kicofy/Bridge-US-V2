@@ -22,6 +22,11 @@ async def screen_post(db: AsyncSession, post: Post, title: str, content: str) ->
         labels = ["ai_error"]
         decision = "review"
         reason = "AI moderation unavailable"
+    except Exception as exc:  # broader catch to avoid blocking publish on provider errors
+        risk_score = settings.moderation_review_threshold
+        labels = ["ai_error", exc.__class__.__name__]
+        decision = "review"
+        reason = "AI moderation failed"
 
     if risk_score >= settings.moderation_reject_threshold:
         decision = "reject"

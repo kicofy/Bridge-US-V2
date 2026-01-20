@@ -3,6 +3,7 @@ import { ArrowLeft, Send, AlertCircle, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { RichTextEditor } from './RichTextEditor';
+import { RichTextDisplay } from './RichTextDisplay';
 import { use3DHover } from '../hooks/use3DHover';
 import { createPost } from '../api/posts';
 import { ApiError } from '../api/client';
@@ -44,6 +45,7 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
@@ -212,29 +214,50 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
             )}
           </div>
 
-          {/* Content Editor */}
+          {/* Content Editor + Preview */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">
-              {t('createPost.contentLabel')} <span className="text-red-600">*</span>
-            </label>
+              <label className="text-sm font-medium">
+                {t('createPost.contentLabel')} <span className="text-red-600">*</span>
+              </label>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={showPreview}
+                  onChange={(e) => setShowPreview(e.target.checked)}
+                  className="h-4 w-4 rounded border border-border"
+                />
+                {t('createPost.preview')}
+              </label>
             </div>
 
-            <RichTextEditor
-              value={content}
-              onChange={setContent}
-              placeholder={t('createPost.contentPlaceholder')}
-            />
-
-            {errors.content && (
-              <div className="flex items-center gap-2 text-xs text-red-600">
-                <AlertCircle className="h-3 w-3" />
-                <span>{errors.content}</span>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-2">
+                <RichTextEditor
+                  value={content}
+                  onChange={setContent}
+                  placeholder={t('createPost.contentPlaceholder')}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('createPost.contentCount', { count: content.length })}
+                </p>
+                {errors.content && (
+                  <div className="flex items-center gap-2 text-xs text-red-600">
+                    <AlertCircle className="h-3 w-3" />
+                    <span>{errors.content}</span>
+                  </div>
+                )}
               </div>
-            )}
-            <p className="text-xs text-muted-foreground">
-              {t('createPost.contentCount', { count: content.length })}
-            </p>
+
+              {showPreview && (
+                <div className="rounded-xl border bg-muted/30 p-3 sm:p-4">
+                  <p className="text-xs text-muted-foreground mb-2">{t('createPost.preview')}</p>
+                  <div className="min-h-[200px]">
+                    <RichTextDisplay content={content || t('createPost.noContent')} className="text-sm" />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Tags */}

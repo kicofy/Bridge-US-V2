@@ -244,11 +244,15 @@ export function RichTextDisplay({ content, className = '' }: RichTextDisplayProp
   if (isHtml) {
     return (
       <div
-        className={`prose prose-sm sm:prose max-w-none ${className}`}
+        className={`prose prose-sm sm:prose max-w-none whitespace-pre-wrap break-words leading-relaxed ${className}`}
         dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
       />
     );
   }
 
-  return <div className={`prose prose-sm sm:prose max-w-none ${className}`}>{formattedContent}</div>;
+  return (
+    <div className={`prose prose-sm sm:prose max-w-none whitespace-pre-wrap break-words leading-relaxed ${className}`}>
+      {formattedContent}
+    </div>
+  );
 }
