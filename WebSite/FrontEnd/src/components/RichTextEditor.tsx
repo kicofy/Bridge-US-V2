@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Bold, Italic, Link, Image, List, ListOrdered, Heading2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { uploadImage } from '../api/files';
@@ -21,20 +21,22 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   const [linkText, setLinkText] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
+  const htmlFromMarkdown = useMemo(() => markdownToHtml(value || ''), [value]);
+
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor || isFocused) {
       return;
     }
-    if (editor.innerHTML !== value) {
-      editor.innerHTML = value || '';
+    if (editor.innerHTML !== htmlFromMarkdown) {
+      editor.innerHTML = htmlFromMarkdown;
     }
-  }, [value, isFocused]);
+  }, [htmlFromMarkdown, isFocused]);
 
   const emitChange = () => {
     const editor = editorRef.current;
     if (!editor) return;
-    onChange(editor.innerHTML);
+    onChange(htmlToMarkdown(editor.innerHTML));
   };
 
   const execCommand = (command: string, valueArg?: string) => {
@@ -290,5 +292,138 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
       </div>
     </div>
   );
+}
+
+function markdownToHtml(markdown: string): string {
+  const lines = markdown.split('\n');
+  const html: string[] = [];
+  let inUl = false;
+  let inOl = false;
+
+  const flushLists = () => {
+    if (inUl) {
+      html.push('</ul>');
+      inUl = false;
+    }
+    if (inOl) {
+      html.push('</ol>');
+      inOl = false;
+    }
+  };
+
+  const inline = (text: string) => {
+    return text
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushLists();
+      html.push('<br/>');
+      continue;
+    }
+    if (trimmed.startsWith('## ')) {
+      flushLists();
+      html.push(`<h2>${inline(trimmed.slice(3))}</h2>`);
+      continue;
+    }
+    if (trimmed.startsWith('- ')) {
+      if (!inUl) {
+        flushLists();
+        html.push('<ul>');
+        inUl = true;
+      }
+      html.push(`<li>${inline(trimmed.slice(2))}</li>`);
+      continue;
+    }
+    if (/^\d+\.\s+/.test(trimmed)) {
+      if (!inOl) {
+        flushLists();
+        html.push('<ol>');
+        inOl = true;
+      }
+      html.push(`<li>${inline(trimmed.replace(/^\d+\.\s+/, ''))}</li>`);
+      continue;
+    }
+    flushLists();
+    html.push(`<p>${inline(trimmed)}</p>`);
+  }
+  flushLists();
+  return html.join('');
+}
+
+function htmlToMarkdown(html: string): string {
+  try {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const parts: string[] = [];
+
+    const walk = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return node.textContent || '';
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) {
+        return '';
+      }
+      const el = node as HTMLElement;
+      const tag = el.tagName.toLowerCase();
+      switch (tag) {
+        case 'br':
+          return '\n';
+        case 'strong':
+        case 'b':
+          return `**${collect(el)}**`;
+        case 'em':
+        case 'i':
+          return `*${collect(el)}*`;
+        case 'h2':
+          return `## ${collect(el)}\n\n`;
+        case 'a': {
+          const href = el.getAttribute('href') || '';
+          const text = collect(el);
+          return href ? `[${text}](${href})` : text;
+        }
+        case 'img': {
+          const src = el.getAttribute('src') || '';
+          const alt = el.getAttribute('alt') || '';
+          return src ? `![${alt}](${src})` : '';
+        }
+        case 'ul': {
+          const items = Array.from(el.querySelectorAll('li')).map((li) => `- ${collect(li)}`);
+          return `${items.join('\n')}\n\n`;
+        }
+        case 'ol': {
+          const items = Array.from(el.querySelectorAll('li')).map((li, idx) => `${idx + 1}. ${collect(li)}`);
+          return `${items.join('\n')}\n\n`;
+        }
+        case 'p':
+          return `${collect(el)}\n\n`;
+        default:
+          return collect(el);
+      }
+    };
+
+    const collect = (element: HTMLElement) => {
+      let text = '';
+      element.childNodes.forEach((child) => {
+        text += walk(child);
+      });
+      return text;
+    };
+
+    doc.body.childNodes.forEach((node) => {
+      parts.push(walk(node));
+    });
+
+    return parts
+      .join('')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  } catch {
+    return html;
+  }
 }
 
