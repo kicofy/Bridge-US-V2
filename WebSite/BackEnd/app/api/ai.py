@@ -42,7 +42,7 @@ async def ask_stream(
     # 禁用代理/NGINX 缓冲，确保浏览器能实时收到分块
     return StreamingResponse(
         stream,
-        media_type="text/plain",
+        media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",

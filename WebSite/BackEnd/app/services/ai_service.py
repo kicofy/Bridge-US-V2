@@ -127,7 +127,8 @@ def ask_question_stream(question: str):
         for chunk in stream:
             delta = chunk.choices[0].delta.content or ""
             if delta:
-                yield delta
+                # SSE format to improve chunk boundary delivery
+                yield f"data: {delta}\n\n"
 
     try:
         yield from _stream_with_model(settings.openai_model)

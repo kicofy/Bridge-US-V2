@@ -66,6 +66,7 @@ export async function askQuestionStream(
   }
 
   const decoder = new TextDecoder();
+  let buffer = '';
   while (true) {
     const { value, done } = await reader.read();
     if (done) {
@@ -76,13 +77,35 @@ export async function askQuestionStream(
     const text = decoder.decode(value, { stream: true });
     if (text) {
       console.debug(`${debugPrefix} chunk text`, text);
-      onDelta(text);
+      buffer += text;
+      // SSE 事件以空行分隔
+      while (buffer.includes('\n\n')) {
+        const idx = buffer.indexOf('\n\n');
+        const event = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+        const lines = event.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data:')) {
+            const payload = line.replace(/^data:\s*/, '');
+            if (payload) onDelta(payload);
+          }
+        }
+      }
     }
   }
   // flush any remaining buffered bytes
   const tail = decoder.decode();
   if (tail) {
-    console.debug(`${debugPrefix} tail text`, tail);
-    onDelta(tail);
+    buffer += tail;
+  }
+  if (buffer.trim()) {
+    console.debug(`${debugPrefix} tail buffer`, buffer);
+    const lines = buffer.split('\n');
+    for (const line of lines) {
+      if (line.startsWith('data:')) {
+        const payload = line.replace(/^data:\s*/, '');
+        if (payload) onDelta(payload);
+      }
+    }
   }
 }
