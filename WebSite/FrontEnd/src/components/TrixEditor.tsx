@@ -6,6 +6,13 @@ import { useAuthStore } from '../store/auth';
 const RAW_API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? 'https://api.bridge-us.org/api';
 const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, '');
+const API_ORIGIN = (() => {
+  try {
+    return new URL(API_BASE_URL).origin;
+  } catch {
+    return API_BASE_URL.replace(/\/api\/?$/, '');
+  }
+})();
 
 interface TrixEditorProps {
   value: string;
@@ -111,10 +118,13 @@ export function TrixEditor({ value, onChange, placeholder }: TrixEditorProps) {
             attachment.setUploadProgress(percent);
           }
         });
+        const resolvedUrl = /^https?:\/\//i.test(url)
+          ? url
+          : `${API_ORIGIN}${url.startsWith('/') ? url : `/${url}`}`;
         if (typeof attachment?.setAttributes === 'function') {
           attachment.setAttributes({
-            url,
-            href: url,
+            url: resolvedUrl,
+            href: resolvedUrl,
           });
         }
         if (typeof attachment?.setUploadProgress === 'function') {

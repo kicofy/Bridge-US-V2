@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import logging
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +11,9 @@ from app.services.ai_service import moderate_text
 from app.services.notification_service import create_notification
 
 
+logger = logging.getLogger(__name__)
+
+
 async def screen_post(db: AsyncSession, post: Post, title: str, content: str) -> ModerationLog:
     try:
         result = moderate_text(title, content)
@@ -17,16 +21,29 @@ async def screen_post(db: AsyncSession, post: Post, title: str, content: str) ->
         labels = result.get("labels", [])
         decision = result.get("decision", "pass")
         reason = result.get("reason", "")
-    except AppError:
-        risk_score = settings.moderation_review_threshold
-        labels = ["ai_error"]
-        decision = "review"
-        reason = "AI moderation unavailable"
+    except AppError as exc:
+        if exc.code == "ai_not_configured":
+            risk_score = 0
+            labels = ["ai_disabled"]
+            decision = "pass"
+            reason = "AI moderation disabled"
+        else:
+            risk_score = settings.moderation_review_threshold
+            labels = ["ai_error", exc.code]
+            decision = "review"
+            reason = "AI moderation unavailable"
+        logger.warning(
+            "Moderation fallback for post %s (code=%s, decision=%s)",
+            post.id,
+            exc.code,
+            decision,
+        )
     except Exception as exc:  # broader catch to avoid blocking publish on provider errors
         risk_score = settings.moderation_review_threshold
         labels = ["ai_error", exc.__class__.__name__]
         decision = "review"
         reason = "AI moderation failed"
+        logger.exception("Moderation error for post %s", post.id)
 
     if risk_score >= settings.moderation_reject_threshold:
         decision = "reject"
@@ -53,6 +70,13 @@ async def screen_post(db: AsyncSession, post: Post, title: str, content: str) ->
             post.published_at = datetime.now(timezone.utc)
     else:
         post.status = "pending"
+    logger.info(
+        "Moderation result for post %s: decision=%s risk=%s labels=%s",
+        post.id,
+        decision,
+        risk_score,
+        labels,
+    )
     return log
 
 
