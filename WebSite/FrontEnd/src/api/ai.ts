@@ -28,6 +28,13 @@ export async function askQuestionStream(
     body: JSON.stringify({ question }),
   });
 
+  // 如果后端尚未部署流式接口，降级为普通 ask
+  if (response.status === 404) {
+    const fallback = await askQuestion(question);
+    onDelta(fallback.answer);
+    return;
+  }
+
   if (!response.ok) {
     let message = response.statusText;
     let code: string | undefined;
