@@ -247,13 +247,39 @@ async def _to_response(db: AsyncSession, post: Post, language: str) -> dict:
     )
     translation = translation_result.scalar_one_or_none()
     if translation is None:
-        fallback_result = await db.execute(
-            select(PostTranslation).where(
-                PostTranslation.post_id == post.id,
-                PostTranslation.language == post.original_language,
+        # Try to create translation on the fly if missing and language is supported
+        if language in _languages() and language != post.original_language:
+            source_result = await db.execute(
+                select(PostTranslation).where(
+                    PostTranslation.post_id == post.id,
+                    PostTranslation.language == post.original_language,
+                )
             )
-        )
-        translation = fallback_result.scalar_one_or_none()
+            source_translation = source_result.scalar_one_or_none()
+            if source_translation is not None:
+                translated_title = translate_text(source_translation.title, post.original_language, language)
+                translated_content = translate_text(source_translation.content, post.original_language, language)
+                new_translation = PostTranslation(
+                    post_id=post.id,
+                    language=language,
+                    title=translated_title,
+                    content=translated_content,
+                    status="ready",
+                    translated_by="ai",
+                    model=settings.openai_model,
+                )
+                db.add(new_translation)
+                await db.commit()
+                translation = new_translation
+
+        if translation is None:
+            fallback_result = await db.execute(
+                select(PostTranslation).where(
+                    PostTranslation.post_id == post.id,
+                    PostTranslation.language == post.original_language,
+                )
+            )
+            translation = fallback_result.scalar_one_or_none()
     if translation is None:
         raise AppError(code="post_translation_missing", message="Translation missing", status_code=500)
     translation_status = "ready" if translation.language == language else "pending"
