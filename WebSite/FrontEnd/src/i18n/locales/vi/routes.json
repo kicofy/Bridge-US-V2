@@ -1,0 +1,16 @@
+{
+  "home": {
+    "title": "Tất cả bài viết",
+    "subtitle": "Cộng đồng tin cậy cho du học sinh"
+  },
+  "search": {
+    "emptyTitle": "Bắt đầu tìm kiếm",
+    "emptyDesc": "Nhập từ khóa để tìm bài viết, chủ đề hoặc thông tin"
+  },
+  "ai": {
+    "knowledgeBase": "Kho kiến thức AI",
+    "trustedPosts": "Bài viết tin cậy",
+    "verifiedAnswers": "Câu trả lời đã xác minh",
+    "expertContributors": "Người đóng góp nổi bật"
+  }
+}

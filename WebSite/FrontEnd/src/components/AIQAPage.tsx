@@ -56,12 +56,20 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
           '毕业后如何申请OPT？',
           '校园内有哪些好的兼职工作机会？',
         ]
-      : [
+      : language === 'ko'
+      ? [
           'F-1 비자 연장을 위해 어떤 서류가 필요한가요?',
           '캠퍼스 근처 저렴한 주거를 찾는 방법은?',
           '이용 가능한 건강보험 옵션은 무엇인가요?',
           '졸업 후 OPT 신청은 어떻게 하나요?',
           '캠퍼스에서 할 수 있는 좋은 파트타임 일자리는?',
+        ]
+      : [
+          'Cần giấy tờ gì để gia hạn visa F-1?',
+          'Làm sao tìm nhà ở giá phải chăng gần trường?',
+          'Có những lựa chọn bảo hiểm sức khỏe nào?',
+          'Cách nộp OPT sau khi tốt nghiệp?',
+          'Những việc làm bán thời gian tốt trong campus?',
         ];
 
   useEffect(() => {
@@ -150,7 +158,9 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
             ? `Sorry, I couldn't complete that request. ${message}`
             : language === 'zh'
             ? `抱歉，未能完成请求。${message}`
-            : `죄송합니다. 요청을 처리하지 못했습니다. ${message}`,
+            : language === 'ko'
+            ? `죄송합니다. 요청을 처리하지 못했습니다. ${message}`
+            : `Xin lỗi, tôi không thể xử lý yêu cầu. ${message}`,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMessage]);
@@ -242,7 +252,9 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
                                 ? 'Related Trusted Posts'
                                 : language === 'zh'
                                 ? '相关可信帖子'
-                                : '관련 신뢰 글'}
+                                : language === 'ko'
+                                ? '관련 신뢰 글'
+                                : 'Bài viết liên quan đáng tin cậy'}
                             </span>
                           </div>
                           {message.relatedPosts.map((post, idx) => (
@@ -261,10 +273,16 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
 
                       <p className="px-2 text-xs text-muted-foreground">
                         {message.timestamp.toLocaleTimeString(
-                          language === 'en' ? 'en-US' : language === 'zh' ? 'zh-CN' : 'ko-KR',
+                          language === 'en'
+                            ? 'en-US'
+                            : language === 'zh'
+                            ? 'zh-CN'
+                            : language === 'ko'
+                            ? 'ko-KR'
+                            : 'vi-VN',
                           {
-                          hour: '2-digit',
-                          minute: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
                           }
                         )}
                       </p>

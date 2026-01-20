@@ -223,6 +223,7 @@ export function Navigation({
                 <option value="en">English</option>
                 <option value="zh">中文</option>
                 <option value="ko">한국어</option>
+                <option value="vi">Tiếng Việt</option>
               </select>
             </div>
             {isAuthenticated && (

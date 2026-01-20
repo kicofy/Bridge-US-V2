@@ -43,6 +43,8 @@ export function SettingsPage() {
               ? 'zh'
               : data.language_preference === 'ko'
               ? 'ko'
+              : data.language_preference === 'vi'
+              ? 'vi'
               : 'en',
         });
       })
@@ -69,6 +71,8 @@ export function SettingsPage() {
               ? 'zh'
               : updated.language_preference === 'ko'
               ? 'ko'
+              : updated.language_preference === 'vi'
+              ? 'vi'
               : 'en',
       });
       setLanguage(profileForm.language_preference);
@@ -158,6 +162,8 @@ export function SettingsPage() {
                       ? 'zh'
                       : e.target.value === 'ko'
                       ? 'ko'
+                      : e.target.value === 'vi'
+                      ? 'vi'
                       : 'en',
                 }))
               }
@@ -166,6 +172,7 @@ export function SettingsPage() {
               <option value="en">{t('settings.languageEnglish')}</option>
               <option value="zh">{t('settings.languageChinese')}</option>
               <option value="ko">{t('settings.languageKorean')}</option>
+              <option value="vi">{t('settings.languageVietnamese')}</option>
             </select>
             <p className="text-xs text-muted-foreground">{t('settings.languageHint')}</p>
           </div>
