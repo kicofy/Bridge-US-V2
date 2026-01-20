@@ -1,7 +1,5 @@
-import { apiFetch } from './client';
-import { API_BASE_URL } from './client';
+import { apiFetch, API_BASE_URL, ApiError } from './client';
 import { useAuthStore } from '../store/auth';
-import { ApiError } from './client';
 
 export async function askQuestion(question: string) {
   return apiFetch<{ answer: string }>('/ai/ask', {
@@ -14,6 +12,7 @@ export async function askQuestionStream(
   question: string,
   onDelta: (chunk: string) => void
 ): Promise<void> {
+  const debugPrefix = '[askQuestionStream]';
   const { accessToken } = useAuthStore.getState();
   const headers = new Headers({
     'Content-Type': 'application/json',
@@ -21,6 +20,8 @@ export async function askQuestionStream(
   if (accessToken) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
+
+  console.info(`${debugPrefix} sending`, { apiBase: API_BASE_URL, hasToken: Boolean(accessToken) });
 
   const response = await fetch(`${API_BASE_URL}/ai/ask-stream`, {
     method: 'POST',
@@ -30,12 +31,14 @@ export async function askQuestionStream(
 
   // 如果后端尚未部署流式接口，降级为普通 ask
   if (response.status === 404) {
+    console.warn(`${debugPrefix} 404 fallback to /ai/ask`);
     const fallback = await askQuestion(question);
     onDelta(fallback.answer);
     return;
   }
 
   if (!response.ok) {
+    console.error(`${debugPrefix} non-OK status`, response.status);
     let message = response.statusText;
     let code: string | undefined;
     try {
@@ -48,19 +51,38 @@ export async function askQuestionStream(
     throw new ApiError(message, response.status, code);
   }
 
+  console.info(`${debugPrefix} streaming start`, {
+    status: response.status,
+    contentLength: response.headers.get('content-length'),
+    contentType: response.headers.get('content-type'),
+    xAccelBuffering: response.headers.get('x-accel-buffering'),
+    transferEncoding: response.headers.get('transfer-encoding'),
+  });
+
   const reader = response.body?.getReader();
   if (!reader) {
+    console.error(`${debugPrefix} no reader`);
     throw new ApiError('No response stream', 500);
   }
 
   const decoder = new TextDecoder();
   while (true) {
     const { value, done } = await reader.read();
-    if (done) break;
+    if (done) {
+      console.info(`${debugPrefix} stream done`);
+      break;
+    }
+    console.debug(`${debugPrefix} chunk bytes`, value?.length ?? 0);
     const text = decoder.decode(value, { stream: true });
-    if (text) onDelta(text);
+    if (text) {
+      console.debug(`${debugPrefix} chunk text`, text);
+      onDelta(text);
+    }
   }
   // flush any remaining buffered bytes
   const tail = decoder.decode();
-  if (tail) onDelta(tail);
+  if (tail) {
+    console.debug(`${debugPrefix} tail text`, tail);
+    onDelta(tail);
+  }
 }
