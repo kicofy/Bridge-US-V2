@@ -71,8 +71,8 @@ async def get_item(
 @router.post("", response_model=PostResponse)
 async def create_item(
     payload: PostCreateRequest,
-    user: User = Depends(get_current_user),
     background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     post = await create_post(db, user.id, payload)

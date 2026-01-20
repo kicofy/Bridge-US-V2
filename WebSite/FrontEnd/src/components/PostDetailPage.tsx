@@ -105,11 +105,12 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
   const mapReply = (item: {
     id: string;
     author_id: string;
+    author_name?: string | null;
     content: string;
     helpful_count: number;
     created_at?: string | null;
   }): Reply => {
-    const name = `User ${item.author_id.slice(0, 6)}`;
+    const name = item.author_name || `User ${item.author_id.slice(0, 6)}`;
     const timestamp = item.created_at ? new Date(item.created_at).toLocaleString() : 'Just now';
     return {
       id: item.id,

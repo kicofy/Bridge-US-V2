@@ -11,8 +11,10 @@ export class ApiError extends Error {
   }
 }
 
-const RAW_API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'https://api.bridge-us.org/api';
+const DEFAULT_API_BASE_URL = import.meta.env.DEV
+  ? 'http://127.0.0.1:8000/api'
+  : 'https://api.bridge-us.org/api';
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL;
 const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, '');
 
 let refreshPromise: Promise<boolean> | null = null;

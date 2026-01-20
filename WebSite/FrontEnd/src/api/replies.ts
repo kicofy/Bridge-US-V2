@@ -4,6 +4,7 @@ export type ReplyResponse = {
   id: string;
   post_id: string;
   author_id: string;
+  author_name?: string | null;
   content: string;
   helpful_count: number;
   status: string;

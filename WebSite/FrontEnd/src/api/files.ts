@@ -1,7 +1,9 @@
 import { useAuthStore } from '../store/auth';
 
-const RAW_API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
+const DEFAULT_API_BASE_URL = import.meta.env.DEV
+  ? 'http://127.0.0.1:8000/api'
+  : 'https://api.bridge-us.org/api';
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL;
 const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, '');
 
 export async function uploadImage(file: File): Promise<{ id: string; url: string }> {
