@@ -8,9 +8,17 @@ const RAW_API_BASE_URL =
 const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, '');
 const API_ORIGIN = (() => {
   try {
-    return new URL(API_BASE_URL).origin;
+    const parsed = new URL(API_BASE_URL);
+    if (parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost') {
+      return 'https://api.bridge-us.org';
+    }
+    return parsed.origin;
   } catch {
-    return API_BASE_URL.replace(/\/api\/?$/, '');
+    const fallback = API_BASE_URL.replace(/\/api\/?$/, '');
+    if (fallback.includes('127.0.0.1') || fallback.includes('localhost')) {
+      return 'https://api.bridge-us.org';
+    }
+    return fallback;
   }
 })();
 
