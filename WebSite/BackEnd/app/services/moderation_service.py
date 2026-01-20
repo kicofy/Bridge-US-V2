@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.errors import AppError
-from app.models.models import Appeal, ModerationAction, ModerationLog, Post
+from app.models.models import Appeal, ModerationAction, ModerationLog, Post, PostTranslation
 from app.services.ai_service import moderate_text
 from app.services.notification_service import create_notification
 
@@ -157,11 +157,24 @@ async def resolve_post_review(
     )
     await db.commit()
     await db.refresh(post)
+    title_result = await db.execute(
+        select(PostTranslation.title).where(
+            PostTranslation.post_id == post.id,
+            PostTranslation.language == post.original_language,
+        )
+    )
+    post_title = title_result.scalar_one_or_none()
     await create_notification(
         db,
         post.author_id,
         "post_reviewed",
-        {"post_id": post.id, "status": post.status, "action": action, "reason": reason},
+        {
+            "post_id": post.id,
+            "post_title": post_title,
+            "status": post.status,
+            "action": action,
+            "reason": reason,
+        },
         dedupe_key=f"post_review:{post.id}:{action}",
     )
     return post

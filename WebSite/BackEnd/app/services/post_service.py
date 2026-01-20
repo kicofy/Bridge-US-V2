@@ -312,7 +312,7 @@ async def process_post_submission(db: AsyncSession, post_id: str) -> None:
             db,
             post.author_id,
             "post_published",
-            {"post_id": post.id},
+            {"post_id": post.id, "post_title": original.title},
             dedupe_key=f"post_published:{post.id}",
         )
     await db.commit()

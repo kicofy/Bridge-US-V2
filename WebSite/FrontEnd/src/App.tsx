@@ -147,9 +147,11 @@ function AppShell() {
   }, [location.pathname, location.search, location.hash]);
 
   const handleNotificationClick = (notification: Notification) => {
-    // Handle notification click - could navigate to related content
-    console.log('Notification clicked:', notification);
-    // Example: navigate to the related post
+    if (notification.link) {
+      navigate(notification.link);
+    } else {
+      navigate('/notifications');
+    }
   };
 
   const handlePublishPost = (newPost: NewPost) => {
@@ -173,6 +175,7 @@ function AppShell() {
             onNavigate={handleNavigate}
             language={language}
             onLanguageToggle={handleLanguageToggle}
+            onNotificationClick={handleNotificationClick}
           />
 
           <div className="mx-auto max-w-7xl px-3 sm:px-4 py-4 sm:py-6 lg:px-8">

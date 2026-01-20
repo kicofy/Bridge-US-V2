@@ -166,6 +166,12 @@
       "system": "System update"
     },
     "genericMessage": "You have a new update.",
+    "postTitle": "Post: {{title}}",
+    "replyExcerpt": "Reply: {{excerpt}}",
+    "fromUser": "From: {{name}}",
+    "statusUpdate": "Status: {{status}}",
+    "rating": "Rating: {{rating}}",
+    "method": "Method: {{method}}",
     "relatedPost": "Related to post {{id}}",
     "relatedReply": "Related to reply {{id}}",
     "relatedReport": "Related to report {{id}}",

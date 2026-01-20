@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
-from app.models.models import AccuracyFeedback, HelpfulnessVote, Post, Profile, Reply
+from app.models.models import AccuracyFeedback, HelpfulnessVote, Post, PostTranslation, Profile, Reply
 from app.schemas.interaction import AccuracyFeedbackRequest
 from app.services.notification_service import create_notification
 
@@ -22,11 +22,20 @@ async def mark_helpful_post(db: AsyncSession, user_id: str, post_id: str) -> Non
     await _recompute_post_helpful(db, post_id)
     await _recompute_user_helpfulness(db, post.author_id)
     if post.author_id != user_id:
+        title_result = await db.execute(
+            select(PostTranslation.title).where(
+                PostTranslation.post_id == post_id,
+                PostTranslation.language == post.original_language,
+            )
+        )
+        post_title = title_result.scalar_one_or_none()
+        author_result = await db.execute(select(Profile.display_name).where(Profile.user_id == user_id))
+        from_user_name = author_result.scalar_one_or_none()
         await create_notification(
             db,
             post.author_id,
             "post_helpful",
-            {"post_id": post_id, "from_user_id": user_id},
+            {"post_id": post_id, "post_title": post_title, "from_user_name": from_user_name},
             dedupe_key=f"post_helpful:{post_id}:{user_id}",
         )
 
@@ -61,11 +70,16 @@ async def mark_helpful_reply(db: AsyncSession, user_id: str, reply_id: str) -> N
     await _recompute_reply_helpful(db, reply_id)
     await _recompute_reply_author_helpfulness(db, reply.author_id)
     if reply.author_id != user_id:
+        excerpt = " ".join(reply.content.split()).strip()
+        if len(excerpt) > 120:
+            excerpt = f"{excerpt[:120]}..."
+        author_result = await db.execute(select(Profile.display_name).where(Profile.user_id == user_id))
+        from_user_name = author_result.scalar_one_or_none()
         await create_notification(
             db,
             reply.author_id,
             "reply_helpful",
-            {"reply_id": reply_id, "from_user_id": user_id},
+            {"reply_id": reply_id, "reply_excerpt": excerpt, "from_user_name": from_user_name},
             dedupe_key=f"reply_helpful:{reply_id}:{user_id}",
         )
 
@@ -111,11 +125,25 @@ async def submit_accuracy_feedback(
         await _recompute_post_accuracy(db, post_id)
         await _recompute_user_accuracy(db, post.author_id)
         if post.author_id != user_id:
+            title_result = await db.execute(
+                select(PostTranslation.title).where(
+                    PostTranslation.post_id == post_id,
+                    PostTranslation.language == post.original_language,
+                )
+            )
+            post_title = title_result.scalar_one_or_none()
+            author_result = await db.execute(select(Profile.display_name).where(Profile.user_id == user_id))
+            from_user_name = author_result.scalar_one_or_none()
             await create_notification(
                 db,
                 post.author_id,
                 "post_rated",
-                {"post_id": post_id, "from_user_id": user_id, "rating": payload.rating},
+                {
+                    "post_id": post_id,
+                    "post_title": post_title,
+                    "from_user_name": from_user_name,
+                    "rating": payload.rating,
+                },
                 dedupe_key=f"post_rated:{post_id}:{user_id}",
             )
 

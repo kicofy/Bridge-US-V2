@@ -12,9 +12,16 @@ interface NavigationProps {
   onNavigate: (page: string) => void;
   language: string;
   onLanguageToggle: () => void;
+  onNotificationClick?: (notification: Notification) => void;
 }
 
-export function Navigation({ currentPage, onNavigate, language, onLanguageToggle }: NavigationProps) {
+export function Navigation({
+  currentPage,
+  onNavigate,
+  language,
+  onLanguageToggle,
+  onNotificationClick,
+}: NavigationProps) {
   const { t, i18n } = useTranslation();
   const { refreshToken, clear, accessToken } = useAuthStore();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -28,12 +35,7 @@ export function Navigation({ currentPage, onNavigate, language, onLanguageToggle
   const isAuthenticated = Boolean(accessToken);
 
   const handleNotificationClick = (notification: Notification) => {
-    // Handle notification click - could navigate to related post/page
-    console.log('Notification clicked:', notification);
-    // Example: if notification has a link, navigate there
-    // if (notification.link) {
-    //   onNavigate(notification.link);
-    // }
+    onNotificationClick?.(notification);
   };
 
   const handleViewAllNotifications = () => {

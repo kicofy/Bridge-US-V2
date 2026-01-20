@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
-from app.models.models import Post, Reply
+from app.models.models import Post, PostTranslation, Profile, Reply
 from app.services.notification_service import create_notification
 from app.schemas.reply import ReplyCreateRequest, ReplyUpdateRequest
 
@@ -53,11 +53,30 @@ async def create_reply(
     db.add(reply)
     await db.commit()
     await db.refresh(reply)
+
+    excerpt = " ".join(payload.content.split()).strip()
+    if len(excerpt) > 120:
+        excerpt = f"{excerpt[:120]}..."
+    title_result = await db.execute(
+        select(PostTranslation.title).where(
+            PostTranslation.post_id == post.id,
+            PostTranslation.language == post.original_language,
+        )
+    )
+    post_title = title_result.scalar_one_or_none()
+    author_result = await db.execute(select(Profile.display_name).where(Profile.user_id == author_id))
+    author_name = author_result.scalar_one_or_none()
     await create_notification(
         db,
         post.author_id,
         "reply_created",
-        {"post_id": post.id, "reply_id": reply.id},
+        {
+            "post_id": post.id,
+            "reply_id": reply.id,
+            "post_title": post_title,
+            "reply_excerpt": excerpt,
+            "from_user_name": author_name,
+        },
         dedupe_key=f"reply:{reply.id}",
     )
     return reply

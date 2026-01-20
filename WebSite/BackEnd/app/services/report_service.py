@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
-from app.models.models import ModerationAction, Post, Report, Reply
+from app.models.models import ModerationAction, Post, PostTranslation, Report, Reply
 from app.services.notification_service import create_notification
 
 
@@ -89,11 +89,36 @@ async def resolve_report(
     )
     await db.commit()
     await db.refresh(report)
+    target_title = None
+    target_excerpt = None
+    if report.target_type == "post":
+        post_result = await db.execute(select(Post).where(Post.id == report.target_id))
+        post = post_result.scalar_one_or_none()
+        if post is not None:
+            title_result = await db.execute(
+                select(PostTranslation.title).where(
+                    PostTranslation.post_id == report.target_id,
+                    PostTranslation.language == post.original_language,
+                )
+            )
+            target_title = title_result.scalar_one_or_none()
+    elif report.target_type == "reply":
+        reply_result = await db.execute(select(Reply).where(Reply.id == report.target_id))
+        reply = reply_result.scalar_one_or_none()
+        if reply is not None:
+            excerpt = " ".join(reply.content.split()).strip()
+            target_excerpt = f"{excerpt[:120]}..." if len(excerpt) > 120 else excerpt
     await create_notification(
         db,
         report.reporter_id,
         "report_resolved",
-        {"report_id": report.id, "status": report.status},
+        {
+            "report_id": report.id,
+            "status": report.status,
+            "target_type": report.target_type,
+            "post_title": target_title,
+            "reply_excerpt": target_excerpt,
+        },
         dedupe_key=str(report.id),
     )
     author_id = await _get_target_author(db, report.target_type, report.target_id)
@@ -102,7 +127,13 @@ async def resolve_report(
             db,
             author_id,
             "report_result",
-            {"report_id": report.id, "status": report.status},
+            {
+                "report_id": report.id,
+                "status": report.status,
+                "target_type": report.target_type,
+                "post_title": target_title,
+                "reply_excerpt": target_excerpt,
+            },
             dedupe_key=f"{report.id}:author",
         )
     return report

@@ -50,7 +50,7 @@ async def approve_verification(db: AsyncSession, request_id: str, reviewer_id: s
         db,
         request.user_id,
         "verification_approved",
-        {"request_id": request.id},
+        {"request_id": request.id, "status": "approved"},
         dedupe_key=str(request.id),
     )
     await log_action(db, reviewer_id, "verification", request.id, "verification_approve", None)
@@ -68,7 +68,7 @@ async def reject_verification(db: AsyncSession, request_id: str, reviewer_id: st
         db,
         request.user_id,
         "verification_rejected",
-        {"request_id": request.id},
+        {"request_id": request.id, "status": "rejected"},
         dedupe_key=str(request.id),
     )
     await log_action(db, reviewer_id, "verification", request.id, "verification_reject", None)

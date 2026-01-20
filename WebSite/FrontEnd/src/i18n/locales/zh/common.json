@@ -166,6 +166,12 @@
       "system": "系统通知"
     },
     "genericMessage": "你有一条新消息。",
+    "postTitle": "帖子：{{title}}",
+    "replyExcerpt": "回复：{{excerpt}}",
+    "fromUser": "来自：{{name}}",
+    "statusUpdate": "状态：{{status}}",
+    "rating": "评分：{{rating}}",
+    "method": "方式：{{method}}",
     "relatedPost": "关联帖子 {{id}}",
     "relatedReply": "关联回复 {{id}}",
     "relatedReport": "关联举报 {{id}}",
