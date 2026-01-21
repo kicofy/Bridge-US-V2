@@ -8,7 +8,7 @@ from app.core.errors import AppError
 from app.models.models import Category, Post, PostTag, PostTranslation, Profile, Tag, User
 from app.services.notification_service import create_notification
 from app.schemas.post import PostCreateRequest, PostUpdateRequest
-from app.services.ai_service import translate_post
+from app.services.ai_service import translate_post, translate_text
 from app.services.moderation_service import screen_post
 
 
