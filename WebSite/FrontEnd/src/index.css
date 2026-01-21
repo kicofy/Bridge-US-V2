@@ -4477,6 +4477,12 @@ html {
   line-height: 1.25;
 }
 
+.codex-editor .ce-toolbar__plus,
+.codex-editor .ce-toolbar__settings {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
 .codex-editor h1.ce-header {
   font-size: 1.5rem;
 }
