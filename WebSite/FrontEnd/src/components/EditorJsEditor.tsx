@@ -59,7 +59,12 @@ export function EditorJsEditor({ value, onChange, placeholder }: EditorJsEditorP
 
     if (value) {
       try {
-        initialDataRef.current = JSON.parse(value);
+        const parsed = JSON.parse(value);
+        if (parsed && Array.isArray(parsed.blocks)) {
+          initialDataRef.current = parsed;
+        } else {
+          initialDataRef.current = null;
+        }
       } catch {
         initialDataRef.current = null;
       }
@@ -115,7 +120,7 @@ export function EditorJsEditor({ value, onChange, placeholder }: EditorJsEditorP
       editorRef.current = null;
       initializedRef.current = false;
     };
-  }, [onChange, placeholder, value]);
+  }, [onChange, placeholder]);
 
   useEffect(() => {
     if (!editorRef.current || !value) return;
