@@ -73,6 +73,40 @@ export function NotificationDropdown({ onNotificationClick, onViewAll }: Notific
   }, [accessToken, prefetched, t]);
 
   useEffect(() => {
+    if (!accessToken) return;
+    let isActive = true;
+
+    const refresh = () => {
+      listNotifications(6, 0)
+        .then((items) => {
+          if (!isActive) return;
+          setNotifications(items.map((item) => mapNotification(item, t)));
+        })
+        .catch(() => {
+          if (!isActive) return;
+          setNotifications([]);
+        });
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refresh();
+      }
+    };
+
+    const intervalId = window.setInterval(refresh, 30000);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', refresh);
+
+    return () => {
+      isActive = false;
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', refresh);
+    };
+  }, [accessToken, t]);
+
+  useEffect(() => {
     if (!isOpen || !accessToken) return;
     setLoading(true);
     listNotifications(6, 0)
