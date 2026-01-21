@@ -4477,8 +4477,9 @@ html {
   line-height: 1.25;
 }
 
-.codex-editor .ce-toolbar__plus,
-.codex-editor .ce-toolbar__settings {
+/* Align toolbar only for header blocks */
+.codex-editor:has(.ce-block--focused .ce-header) .ce-toolbar__plus,
+.codex-editor:has(.ce-block--focused .ce-header) .ce-toolbar__settings {
   top: 50% !important;
   transform: translateY(-50%) !important;
 }
