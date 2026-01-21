@@ -61,7 +61,18 @@ export function EditorJsEditor({ value, onChange, placeholder }: EditorJsEditorP
       try {
         const parsed = JSON.parse(value);
         if (parsed && Array.isArray(parsed.blocks)) {
-          initialDataRef.current = parsed;
+          const blocks = parsed.blocks.filter((block: any) => {
+            if (!block || typeof block.type !== 'string') return false;
+            const data = block.data ?? {};
+            if (block.type === 'paragraph') {
+              return typeof data.text === 'string';
+            }
+            if (block.type === 'image') {
+              return typeof data?.file?.url === 'string' && data.file.url.length > 0;
+            }
+            return true;
+          });
+          initialDataRef.current = { ...parsed, blocks };
         } else {
           initialDataRef.current = null;
         }
