@@ -65,13 +65,54 @@ const buildLink = (payload: Record<string, unknown> | null): string | undefined 
   return undefined;
 };
 
+const buildTitle = (
+  type: string,
+  payload: Record<string, unknown> | null,
+  t: TFunction
+) => {
+  const postTitle = typeof payload?.post_title === 'string' ? payload?.post_title : '';
+  if (type === 'post_published') {
+    return t('notifications.postPublishedTitle');
+  }
+  if (type === 'post_reviewed') {
+    const action = typeof payload?.action === 'string' ? payload?.action : '';
+    if (action === 'approve') return t('notifications.postApprovedTitle');
+    if (action === 'reject') return t('notifications.postRejectedTitle');
+    return t('notifications.postReviewTitle');
+  }
+  return t(`notifications.labels.${resolveType(type)}`);
+};
+
+const buildDetailedMessage = (
+  type: string,
+  payload: Record<string, unknown> | null,
+  t: TFunction
+) => {
+  const postTitle = typeof payload?.post_title === 'string' ? payload?.post_title : '';
+  const reason = typeof payload?.reason === 'string' ? payload?.reason : '';
+  if (type === 'post_published') {
+    return t('notifications.postPublishedMessage', { title: postTitle });
+  }
+  if (type === 'post_reviewed') {
+    const action = typeof payload?.action === 'string' ? payload?.action : '';
+    if (action === 'approve') {
+      return t('notifications.postApprovedMessage', { title: postTitle });
+    }
+    if (action === 'reject') {
+      return t('notifications.postRejectedMessage', { title: postTitle, reason });
+    }
+    return t('notifications.postReviewMessage', { title: postTitle });
+  }
+  return buildMessage(payload, t);
+};
+
 export const mapNotification = (item: NotificationResponse, t: TFunction): Notification => {
   const type = resolveType(item.type);
   return {
     id: item.id,
     type,
-    title: t(`notifications.labels.${type}`),
-    message: buildMessage(item.payload ?? null, t),
+    title: buildTitle(item.type, item.payload ?? null, t),
+    message: buildDetailedMessage(item.type, item.payload ?? null, t),
     link: buildLink(item.payload ?? null),
     timestamp: formatTimestamp(item.created_at),
     read: Boolean(item.read_at),

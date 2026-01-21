@@ -5,6 +5,7 @@ import { use3DHover } from '../hooks/use3DHover';
 import { useTranslation } from 'react-i18next';
 import { listNotifications, markAllNotificationsRead, markNotificationsRead } from '../api/notifications';
 import { mapNotification } from '../utils/notifications';
+import { useAuthStore } from '../store/auth';
 
 export interface Notification {
   id: string;
@@ -27,9 +28,11 @@ interface NotificationDropdownProps {
 
 export function NotificationDropdown({ onNotificationClick, onViewAll }: NotificationDropdownProps) {
   const { t } = useTranslation();
+  const { accessToken } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
+  const [prefetched, setPrefetched] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const bellBtn3D = use3DHover({ maxRotation: 8, scale: 1.08 });
 
@@ -53,13 +56,30 @@ export function NotificationDropdown({ onNotificationClick, onViewAll }: Notific
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!accessToken) {
+      setNotifications([]);
+      setPrefetched(false);
+      return;
+    }
+    if (prefetched) return;
+    setLoading(true);
+    listNotifications(6, 0)
+      .then((items) => setNotifications(items.map((item) => mapNotification(item, t))))
+      .catch(() => setNotifications([]))
+      .finally(() => {
+        setLoading(false);
+        setPrefetched(true);
+      });
+  }, [accessToken, prefetched, t]);
+
+  useEffect(() => {
+    if (!isOpen || !accessToken) return;
     setLoading(true);
     listNotifications(6, 0)
       .then((items) => setNotifications(items.map((item) => mapNotification(item, t))))
       .catch(() => setNotifications([]))
       .finally(() => setLoading(false));
-  }, [isOpen, t]);
+  }, [accessToken, isOpen, t]);
 
   const handleMarkAsRead = async (id: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
