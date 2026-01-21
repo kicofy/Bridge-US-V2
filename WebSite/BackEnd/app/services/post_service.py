@@ -16,6 +16,26 @@ def _languages() -> list[str]:
     return [lang.strip() for lang in settings.supported_languages.split(",") if lang.strip()]
 
 
+def _extract_editorjs_text(content: str) -> str:
+    try:
+        import json
+
+        data = json.loads(content)
+        blocks = data.get("blocks")
+        if not isinstance(blocks, list):
+            return content
+        parts: list[str] = []
+        for block in blocks:
+            block_data = block.get("data", {}) if isinstance(block, dict) else {}
+            if isinstance(block_data.get("text"), str):
+                parts.append(block_data["text"])
+            elif isinstance(block_data.get("items"), list):
+                parts.append(" ".join(str(item) for item in block_data["items"]))
+        return "\n".join(part for part in parts if part).strip()
+    except Exception:
+        return content
+
+
 async def create_post(db: AsyncSession, author_id: str, payload: PostCreateRequest) -> Post:
     if payload.language not in _languages():
         raise AppError(code="invalid_language", message="Unsupported language", status_code=400)
@@ -86,14 +106,15 @@ async def update_post(
             await _apply_tags(db, post.id, payload.tags)
 
         if post.status == "published":
-            await screen_post(db, post, original.title, original.content)
+            content_for_ai = _extract_editorjs_text(original.content)
+            await screen_post(db, post, original.title, content_for_ai)
             if post.status == "published":
                 await _translate_missing(
                     db,
                     post.id,
                     post.original_language,
                     original.title,
-                    original.content,
+                    content_for_ai,
                 )
 
     await db.commit()
@@ -195,9 +216,10 @@ async def publish_post(db: AsyncSession, post_id: str) -> Post:
     original = translation_result.scalar_one_or_none()
     if original is None:
         raise AppError(code="post_translation_missing", message="Original translation missing", status_code=500)
-    await screen_post(db, post, original.title, original.content)
+    content_for_ai = _extract_editorjs_text(original.content)
+    await screen_post(db, post, original.title, content_for_ai)
     if post.status == "published":
-        await _translate_missing(db, post.id, post.original_language, original.title, original.content)
+        await _translate_missing(db, post.id, post.original_language, original.title, content_for_ai)
     await db.commit()
     await db.refresh(post)
     return post

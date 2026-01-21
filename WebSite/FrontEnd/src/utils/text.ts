@@ -7,6 +7,24 @@ export function stripRichText(input: string): string {
     return '';
   }
 
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (parsed && Array.isArray(parsed.blocks)) {
+      const parts: string[] = [];
+      for (const block of parsed.blocks) {
+        const data = block?.data ?? {};
+        if (typeof data.text === 'string') {
+          parts.push(data.text);
+        } else if (Array.isArray(data.items)) {
+          parts.push(data.items.join(' '));
+        }
+      }
+      return parts.join(' ').replace(/\s+/g, ' ').trim();
+    }
+  } catch {
+    // ignore JSON parsing failures
+  }
+
   // If HTML-like content, strip tags using DOMParser (browser-safe).
   if (trimmed.includes('<') && trimmed.includes('>')) {
     try {

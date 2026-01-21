@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { EditorJsViewer } from './EditorJsViewer';
 
 interface RichTextDisplayProps {
   content: string;
@@ -7,10 +8,22 @@ interface RichTextDisplayProps {
 
 export function RichTextDisplay({ content, className = '' }: RichTextDisplayProps) {
   const isHtml = useMemo(() => /<\/?[a-z][\s\S]*>/i.test(content), [content]);
+  const editorJsData = useMemo(() => {
+    if (!content) return null;
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed && Array.isArray(parsed.blocks)) {
+        return parsed;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }, [content]);
   const [formattedContent, setFormattedContent] = useState<JSX.Element[]>([]);
 
   useEffect(() => {
-    if (isHtml) {
+    if (isHtml || editorJsData) {
       return;
     }
     const parseMarkdown = (text: string): JSX.Element[] => {
@@ -244,6 +257,10 @@ export function RichTextDisplay({ content, className = '' }: RichTextDisplayProp
       return content;
     }
   }, [content, isHtml]);
+
+  if (editorJsData) {
+    return <EditorJsViewer data={editorJsData} className={`editorjs-content ${className}`} />;
+  }
 
   if (isHtml) {
     return (

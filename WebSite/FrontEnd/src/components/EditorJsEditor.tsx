@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import EditorJS from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
 import Quote from '@editorjs/quote';
 import Delimiter from '@editorjs/delimiter';
 import ImageTool from '@editorjs/image';
-import editorjsHTML from 'editorjs-html';
 import { useAuthStore } from '../store/auth';
 
 const RAW_API_BASE_URL =
@@ -52,17 +51,26 @@ export function EditorJsEditor({ value, onChange, placeholder }: EditorJsEditorP
   const editorRef = useRef<EditorJS | null>(null);
   const holderId = useRef(`editorjs-${Math.random().toString(36).slice(2)}`);
   const initializedRef = useRef(false);
-  const parser = useMemo(() => editorjsHTML(), []);
+  const initialDataRef = useRef<any | null>(null);
 
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
+
+    if (value) {
+      try {
+        initialDataRef.current = JSON.parse(value);
+      } catch {
+        initialDataRef.current = null;
+      }
+    }
 
     const { accessToken } = useAuthStore.getState();
 
     const editor = new EditorJS({
       holder: holderId.current,
       placeholder,
+      data: initialDataRef.current ?? undefined,
       tools: {
         header: Header,
         list: List,
@@ -96,9 +104,7 @@ export function EditorJsEditor({ value, onChange, placeholder }: EditorJsEditorP
       },
       onChange: async () => {
         const output = await editor.save();
-        const htmlFragments = parser.parse(output);
-        const html = htmlFragments.join('\n');
-        onChange(html);
+        onChange(JSON.stringify(output));
       },
     });
 
@@ -109,11 +115,11 @@ export function EditorJsEditor({ value, onChange, placeholder }: EditorJsEditorP
       editorRef.current = null;
       initializedRef.current = false;
     };
-  }, [onChange, parser, placeholder]);
+  }, [onChange, placeholder, value]);
 
   useEffect(() => {
     if (!editorRef.current || !value) return;
-    // Editor.js does not accept HTML as initial value; keep for future migration.
+    // Editor.js uses JSON data; updates are handled on re-mount only.
   }, [value]);
 
   return (
