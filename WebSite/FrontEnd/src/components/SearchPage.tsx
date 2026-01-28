@@ -128,7 +128,7 @@ export function SearchPage({
 
   return (
     <div className="flex-1">
-      <div className="mb-5 sm:mb-8">
+      <div className="mb-6 sm:mb-9">
         <div className="rounded-3xl border border-white/70 glass-subtle px-4 py-4 sm:px-6 sm:py-5">
           <div className="mb-3 h-1 w-12 rounded-full bg-[var(--bridge-blue)]/30" />
           <h1 className="section-title">
@@ -138,8 +138,8 @@ export function SearchPage({
       </div>
 
       {/* Search bar */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex items-center gap-3">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-center gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 sm:left-4 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -171,7 +171,7 @@ export function SearchPage({
       </div>
 
       {/* Filters */}
-      <div className="mb-6">
+      <div className="mb-8 sm:mb-10">
         <SearchFilters
           filters={filters}
           onFilterChange={handleFilterChange}
@@ -181,7 +181,7 @@ export function SearchPage({
 
       {/* Results - only show when there's a search query */}
       {appliedQuery && (
-        <div className="space-y-3 sm:space-y-4">
+        <div className="space-y-4 sm:space-y-5">
           {error && (
             <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               {error}
@@ -217,10 +217,10 @@ export function SearchPage({
 
       {/* Empty state - show when no search query */}
       {!searchQuery.trim() && (
-        <div className="space-y-6">
+        <div className="space-y-8 sm:space-y-10">
           {trending.length > 0 ? (
-            <div className="space-y-3 sm:space-y-4">
-              <h3 className="text-base sm:text-lg font-semibold">{t("search.trending")}</h3>
+            <div className="space-y-4 sm:space-y-5">
+              <h3 className="text-base sm:text-lg font-semibold mt-2">{t("search.trending")}</h3>
               {trending.map((post) => (
                 <PostCard
                   key={post.id}
