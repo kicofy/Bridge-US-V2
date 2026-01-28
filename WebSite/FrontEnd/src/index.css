@@ -4410,6 +4410,82 @@ h4 {
   box-shadow: 0 10px 24px rgba(31, 42, 46, 0.08);
 }
 
+.font-display {
+  font-family: var(--font-display);
+}
+
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--foreground);
+  border: 1px solid transparent;
+  transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease, border 180ms ease;
+}
+
+.nav-pill:hover {
+  background: var(--muted);
+}
+
+.nav-pill-active {
+  background: var(--bridge-blue-light);
+  color: var(--bridge-blue);
+  border-color: rgba(59, 124, 136, 0.18);
+  box-shadow: 0 8px 16px rgba(59, 124, 136, 0.12);
+}
+
+.nav-pill-solid {
+  background: var(--bridge-blue);
+  color: white;
+  border-color: rgba(59, 124, 136, 0.3);
+  box-shadow: 0 10px 24px rgba(59, 124, 136, 0.22);
+}
+
+.nav-pill-outline {
+  border-color: rgba(31, 42, 46, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.control-pill {
+  border-radius: 999px;
+  border: 1px solid rgba(31, 42, 46, 0.15);
+  background: rgba(255, 255, 255, 0.75);
+  padding: 0.35rem 0.75rem;
+  box-shadow: 0 8px 20px rgba(31, 42, 46, 0.08);
+}
+
+.section-kicker {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  font-weight: 700;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 2.4vw, 2.4rem);
+  color: var(--foreground);
+}
+
+.section-subtitle {
+  max-width: 40rem;
+  color: var(--muted-foreground);
+}
+
+.tag-pill {
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  background: rgba(59, 124, 136, 0.08);
+  color: var(--bridge-blue);
+  border: 1px solid rgba(59, 124, 136, 0.12);
+}
+
 /* Trix content styling for editor + display */
 :is(.trix-content, trix-editor, .editorjs-content) {
   line-height: 1.7;

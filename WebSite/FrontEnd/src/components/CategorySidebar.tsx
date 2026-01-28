@@ -22,11 +22,11 @@ export function CategorySidebar({ selectedCategory, onSelectCategory }: Category
   return (
     <aside className="sticky top-20 hidden w-64 shrink-0 lg:block">
       <Card3D 
-        className="rounded-2xl glass p-4 shadow-sm"
+        className="rounded-3xl border border-white/70 glass-subtle p-4 shadow-sm"
         maxRotation={5}
         scale={1.01}
       >
-        <h3 className="mb-4 px-3 text-sm text-muted-foreground">Categories</h3>
+        <h3 className="mb-4 px-3 text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold">Categories</h3>
         <nav className="space-y-1">
           {categories.map((category) => {
             const Icon = category.icon;
@@ -37,10 +37,10 @@ export function CategorySidebar({ selectedCategory, onSelectCategory }: Category
                 key={category.id}
                 onClick={() => onSelectCategory(category.id)}
                 className={cn(
-                  "flex w-full items-start gap-3 rounded-xl px-3 py-2.5 transition-all",
+                  "flex w-full items-start gap-3 rounded-2xl px-3 py-2.5 transition-all",
                   isSelected
-                    ? "bg-[var(--bridge-blue-light)] text-[var(--bridge-blue)]"
-                    : "text-foreground hover:bg-secondary"
+                    ? "bg-[var(--bridge-blue-light)] text-[var(--bridge-blue)] shadow-sm"
+                    : "text-foreground hover:bg-white/70"
                 )}
               >
                 <Icon className="mt-0.5 h-4 w-4 shrink-0" />

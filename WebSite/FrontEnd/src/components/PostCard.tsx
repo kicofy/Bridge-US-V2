@@ -63,7 +63,7 @@ export function PostCard({ post, onClick, onAuthorClick, showStatus = false }: P
   return (
     <Card3D 
       onClick={handleCardClick}
-      className="group rounded-2xl glass p-4 sm:p-6 shadow-sm transition-all hover:shadow-lg cursor-pointer"
+      className="group rounded-3xl border border-white/70 glass p-4 sm:p-6 shadow-sm transition-all hover:shadow-xl cursor-pointer"
       maxRotation={6}
       scale={1.01}
     >
@@ -72,7 +72,7 @@ export function PostCard({ post, onClick, onAuthorClick, showStatus = false }: P
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <button
             onClick={handleAuthorClick}
-            className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bridge-blue-light)] to-[var(--bridge-green-light)] text-[var(--bridge-blue)] text-sm sm:text-base hover:opacity-80 transition-opacity backdrop-blur-sm"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bridge-blue-light)] to-[var(--bridge-green-light)] text-[var(--bridge-blue)] text-sm sm:text-base hover:opacity-80 transition-opacity backdrop-blur-sm ring-1 ring-white/70"
           >
             {post.author.name.charAt(0)}
           </button>
@@ -80,7 +80,7 @@ export function PostCard({ post, onClick, onAuthorClick, showStatus = false }: P
             <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={handleAuthorClick}
-                className="text-xs sm:text-sm truncate hover:text-[var(--bridge-blue)] transition-colors"
+                className="text-xs sm:text-sm font-semibold truncate hover:text-[var(--bridge-blue)] transition-colors"
               >
                 {post.author.name}
               </button>
@@ -117,7 +117,7 @@ export function PostCard({ post, onClick, onAuthorClick, showStatus = false }: P
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>
-              <div className="flex items-center gap-1 rounded-lg bg-[var(--bridge-green-light)] px-2 sm:px-3 py-1 sm:py-1.5 shrink-0">
+              <div className="flex items-center gap-1 rounded-full bg-[var(--bridge-green-light)] px-2 sm:px-3 py-1 sm:py-1.5 shrink-0 border border-white/70">
                 <Info className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[var(--bridge-green)]" />
                 <span className="text-xs text-[var(--bridge-green)] whitespace-nowrap">
                   {helpfulRatioText}
@@ -134,7 +134,7 @@ export function PostCard({ post, onClick, onAuthorClick, showStatus = false }: P
       {/* Post content */}
       <div className="mb-3 sm:mb-4">
         <div className="mb-2 flex items-start justify-between gap-2 sm:gap-4">
-          <h3 className="flex-1 text-base sm:text-lg leading-snug group-hover:text-[var(--bridge-blue)] transition-colors">
+          <h3 className="flex-1 text-base sm:text-xl leading-snug font-display group-hover:text-[var(--bridge-blue)] transition-colors">
             {post.title}
           </h3>
           {post.status === 'hidden' && (
@@ -154,7 +154,7 @@ export function PostCard({ post, onClick, onAuthorClick, showStatus = false }: P
           )}
           {/* Translation toggle intentionally hidden per product requirement */}
         </div>
-        <p className="text-sm text-muted-foreground line-clamp-2">{post.preview}</p>
+        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{post.preview}</p>
       </div>
 
       {/* Tags */}
@@ -163,7 +163,7 @@ export function PostCard({ post, onClick, onAuthorClick, showStatus = false }: P
           <Badge 
             key={tag} 
             variant="secondary" 
-            className="rounded-lg glass-subtle text-[var(--bridge-blue)] hover:glass text-xs border-0"
+            className="tag-pill text-xs hover:glass"
           >
             {tag}
           </Badge>
@@ -171,7 +171,7 @@ export function PostCard({ post, onClick, onAuthorClick, showStatus = false }: P
       </div>
 
       {/* Action buttons */}
-      <div className="flex items-center gap-1 sm:gap-2 border-t pt-3 sm:pt-4 flex-wrap">
+      <div className="flex items-center gap-1 sm:gap-2 border-t border-white/70 pt-3 sm:pt-4 flex-wrap">
         <Button 
           variant="ghost" 
           size="sm" 

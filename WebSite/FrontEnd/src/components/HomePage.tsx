@@ -172,12 +172,13 @@ export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAu
         </div>
       )}
 
-      <div className="mb-4 sm:mb-6">
-        <div>
-          <h1 className="mb-2 text-2xl sm:text-3xl">
+      <div className="mb-5 sm:mb-8">
+        <div className="rounded-3xl border border-white/70 glass-subtle px-4 py-4 sm:px-6 sm:py-5">
+          <div className="mb-3 h-1 w-12 rounded-full bg-[var(--bridge-blue)]/30" />
+          <h1 className="mb-2 section-title">
             {selectedCategory === 'all' ? t('routes:home.title') : t('routes:home.title')}
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
+          <p className="text-sm sm:text-base section-subtitle">
             {t('routes:home.subtitle')}
           </p>
         </div>
@@ -185,7 +186,7 @@ export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAu
 
       <FilterBar selectedFilter={selectedFilter} onFilterChange={setSelectedFilter} />
 
-      <div className="space-y-3 sm:space-y-4">
+      <div className="space-y-4 sm:space-y-5">
         {error && (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
@@ -227,7 +228,7 @@ export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAu
             )}
           </>
         ) : (
-          <div className="rounded-2xl glass p-8 sm:p-12 text-center">
+          <div className="rounded-3xl glass p-8 sm:p-12 text-center">
             <p className="text-sm sm:text-base text-muted-foreground">{t('status.noResults')}</p>
           </div>
         )}

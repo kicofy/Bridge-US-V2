@@ -70,7 +70,7 @@ export function Navigation({
   };
 
   return (
-    <nav className="sticky top-0 z-50 border-b glass-strong">
+    <nav className="sticky top-0 z-50 border-b border-white/70 glass-strong backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -86,7 +86,7 @@ export function Navigation({
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 p-1 shadow-sm">
               <img src="/Logo.png" alt="BridgeUS Logo" className="h-full w-full object-contain" />
             </div>
-            <span className="text-lg sm:text-xl text-[var(--bridge-blue)]">BridgeUS</span>
+            <span className="text-lg sm:text-xl text-[var(--bridge-blue)] font-display tracking-wide">BridgeUS</span>
           </button>
 
           {/* Desktop nav links - hidden on mobile */}
@@ -98,10 +98,10 @@ export function Navigation({
               onMouseEnter={homeBtn3D.onMouseEnter}
               onMouseLeave={homeBtn3D.onMouseLeave}
               onClick={() => onNavigate('home')}
-              className={`px-4 py-2 rounded-xl transition-all ${
-                currentPage === 'home' 
-                  ? 'bg-[var(--bridge-blue-light)] text-[var(--bridge-blue)] font-medium' 
-                  : 'text-foreground hover:bg-secondary'
+              className={`nav-pill ${
+                currentPage === 'home'
+                  ? 'nav-pill-active'
+                  : ''
               }`}
             >
               {t('nav.home')}
@@ -113,10 +113,10 @@ export function Navigation({
               onMouseEnter={searchBtn3D.onMouseEnter}
               onMouseLeave={searchBtn3D.onMouseLeave}
               onClick={() => onNavigate('search')}
-              className={`px-4 py-2 rounded-xl transition-all ${
-                currentPage === 'search' 
-                  ? 'bg-[var(--bridge-blue-light)] text-[var(--bridge-blue)] font-medium' 
-                  : 'text-foreground hover:bg-secondary'
+              className={`nav-pill ${
+                currentPage === 'search'
+                  ? 'nav-pill-active'
+                  : ''
               }`}
             >
               {t('nav.search')}
@@ -128,10 +128,10 @@ export function Navigation({
               onMouseEnter={aiBtn3D.onMouseEnter}
               onMouseLeave={aiBtn3D.onMouseLeave}
               onClick={() => onNavigate('ai-qa')}
-              className={`px-4 py-2 rounded-xl transition-all ${
-                currentPage === 'ai-qa' 
-                  ? 'bg-[var(--bridge-blue-light)] text-[var(--bridge-blue)] font-medium' 
-                  : 'text-foreground hover:bg-secondary'
+              className={`nav-pill ${
+                currentPage === 'ai-qa'
+                  ? 'nav-pill-active'
+                  : ''
               }`}
             >
               {t('nav.ai')}
@@ -152,17 +152,13 @@ export function Navigation({
                   onMouseEnter={profileBtn3D.onMouseEnter}
                   onMouseLeave={profileBtn3D.onMouseLeave}
                   onClick={() => onNavigate('profile')}
-                  className={`px-4 py-2 rounded-xl transition-all ${
-                    currentPage === 'profile'
-                      ? 'bg-[var(--bridge-blue)] text-white font-medium'
-                      : 'text-foreground hover:bg-secondary border'
-                  }`}
+                  className={`nav-pill ${currentPage === 'profile' ? 'nav-pill-solid' : 'nav-pill-outline'}`}
                 >
                   {t('nav.profile')}
                 </button>
                 {profileMenuOpen && (
                   <div
-                    className="absolute right-0 mt-2 w-44 rounded-xl border bg-white shadow-lg z-50"
+                    className="absolute right-0 mt-2 w-44 rounded-2xl border border-white/80 glass-strong shadow-lg z-50"
                     onMouseEnter={clearProfileCloseTimer}
                     onMouseLeave={scheduleProfileClose}
                   >
@@ -197,7 +193,7 @@ export function Navigation({
                 onMouseEnter={profileBtn3D.onMouseEnter}
                 onMouseLeave={profileBtn3D.onMouseLeave}
                 onClick={() => onNavigate('login')}
-                className="px-4 py-2 rounded-xl transition-all text-foreground hover:bg-secondary border"
+                className="nav-pill nav-pill-outline"
               >
                 {t('actions.login')}
               </button>
@@ -212,13 +208,13 @@ export function Navigation({
               onMouseMove={langBtn3D.onMouseMove}
               onMouseEnter={langBtn3D.onMouseEnter}
               onMouseLeave={langBtn3D.onMouseLeave}
-              className="flex items-center gap-2 rounded-xl border bg-white px-2 py-1"
+              className="flex items-center gap-2 control-pill"
             >
               <Globe className="h-4 w-4 text-muted-foreground" />
               <select
                 value={language}
                 onChange={handleLanguageChange}
-                className="bg-transparent text-sm outline-none"
+                className="bg-transparent text-sm outline-none font-semibold tracking-wide"
               >
                 <option value="en">English</option>
                 <option value="zh">中文</option>

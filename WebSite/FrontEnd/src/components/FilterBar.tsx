@@ -36,11 +36,11 @@ export function FilterBar({ selectedFilter, onFilterChange }: FilterBarProps) {
       onMouseMove={filterBar3D.onMouseMove}
       onMouseEnter={filterBar3D.onMouseEnter}
       onMouseLeave={filterBar3D.onMouseLeave}
-      className="mb-4 sm:mb-6 flex items-center justify-between rounded-2xl glass p-3 sm:p-4 shadow-sm"
+      className="mb-4 sm:mb-6 flex items-center justify-between rounded-3xl border border-white/70 glass-subtle p-3 sm:p-4 shadow-sm"
     >
       <div className="flex items-center gap-1.5 sm:gap-2">
         <SlidersHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-        <span className="text-xs sm:text-sm text-muted-foreground">Sort:</span>
+        <span className="text-xs sm:text-sm uppercase tracking-[0.2em] text-muted-foreground font-semibold">Sort</span>
       </div>
       
       <div className="flex gap-1.5 sm:gap-2">
@@ -60,8 +60,10 @@ export function FilterBar({ selectedFilter, onFilterChange }: FilterBarProps) {
                 size="sm"
                 onClick={() => onFilterChange(option.id)}
                 className={cn(
-                  "rounded-xl text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3",
-                  selectedFilter === option.id && "bg-[var(--bridge-blue)] hover:bg-[var(--bridge-blue)]/90"
+                  "rounded-full text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4 border border-white/80",
+                  selectedFilter === option.id
+                    ? "bg-[var(--bridge-blue)] hover:bg-[var(--bridge-blue)]/90 text-white"
+                    : "bg-white/70 hover:bg-white/90 text-foreground"
                 )}
               >
                 <span className="hidden sm:inline">{option.label}</span>
