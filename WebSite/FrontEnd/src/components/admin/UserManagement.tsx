@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Filter, Ban, Eye, Shield, X } from 'lucide-react';
+import { Search, Filter, Ban, Eye, Shield, X, FileText } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
   AdminMe,
@@ -14,6 +14,7 @@ import {
   unbanUser,
 } from '../../api/admin';
 import { format } from 'date-fns';
+import { listPosts, PostResponse } from '../../api/posts';
 
 export function UserManagement() {
   const [adminInfo, setAdminInfo] = useState<AdminMe | null>(null);
@@ -25,6 +26,8 @@ export function UserManagement() {
   const [showUserDetail, setShowUserDetail] = useState(false);
   const [loading, setLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [userPosts, setUserPosts] = useState<PostResponse[]>([]);
+  const [userPostsLoading, setUserPostsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -70,14 +73,20 @@ export function UserManagement() {
     setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, role: 'admin' } : item)));
   };
 
-  const handleViewDetails = (user: User) => {
+  const handleViewDetails = (user: AdminUser) => {
     setSelectedUser(user);
     setDetailLoading(true);
     setShowUserDetail(true);
+    setUserPosts([]);
+    setUserPostsLoading(true);
     getAdminUserDetail(user.id)
       .then(setSelectedDetail)
       .catch(() => setSelectedDetail(null))
       .finally(() => setDetailLoading(false));
+    listPosts({ language: 'en', limit: 5, offset: 0, authorId: user.id, includeHidden: true, auth: true })
+      .then(setUserPosts)
+      .catch(() => setUserPosts([]))
+      .finally(() => setUserPostsLoading(false));
   };
 
   const getStatusColor = (status: AdminUser['status']) => {
@@ -283,6 +292,7 @@ export function UserManagement() {
                       ? format(new Date(selectedDetail.last_login_at), 'yyyy-MM-dd HH:mm')
                       : '—'}
                   </div>
+                  <div className="text-sm text-muted-foreground">User ID: {selectedUser.id}</div>
                   <div className="text-sm text-muted-foreground">
                     Language: {selectedDetail?.language_preference ?? '—'}
                   </div>
@@ -322,6 +332,39 @@ export function UserManagement() {
                 <StatCard label="Replies" value={selectedDetail?.replies_count ?? '—'} />
                 <StatCard label="Reports filed" value={selectedDetail?.reports_filed ?? '—'} />
                 <StatCard label="Reports received" value={selectedDetail?.reports_received ?? '—'} />
+              </div>
+
+              {/* Recent posts */}
+              <div className="rounded-2xl border bg-white p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="h-4 w-4 text-[var(--bridge-blue)]" />
+                  <h4 className="text-sm font-semibold">Recent posts</h4>
+                </div>
+                {userPostsLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading recent posts...</p>
+                ) : userPosts.length > 0 ? (
+                  <div className="space-y-3">
+                    {userPosts.map((post) => (
+                      <div key={post.id} className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium">{post.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {post.created_at ? format(new Date(post.created_at), 'yyyy-MM-dd HH:mm') : '—'}
+                          </p>
+                        </div>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            post.status === 'hidden' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
+                          }`}
+                        >
+                          {post.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No posts found.</p>
+                )}
               </div>
 
               {detailLoading && <p className="text-sm text-muted-foreground">Loading details...</p>}
