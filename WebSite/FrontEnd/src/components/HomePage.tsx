@@ -172,8 +172,8 @@ export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAu
         </div>
       )}
 
-      <div className="mb-5 sm:mb-8">
-        <div className="rounded-3xl border border-white/70 glass-subtle px-4 py-4 sm:px-6 sm:py-5">
+      <div className="mb-6 sm:mb-8">
+        <div className="relative z-10 rounded-3xl border border-white/70 glass-subtle px-4 py-4 sm:px-6 sm:py-5">
           <div className="mb-3 h-1 w-12 rounded-full bg-[var(--bridge-blue)]/30" />
           <h1 className="mb-2 section-title">
             {selectedCategory === 'all' ? t('routes:home.title') : t('routes:home.title')}
@@ -184,7 +184,9 @@ export function HomePage({ selectedCategory, onSelectCategory, onPostClick, onAu
         </div>
       </div>
 
-      <FilterBar selectedFilter={selectedFilter} onFilterChange={setSelectedFilter} />
+      <div className="mt-1 sm:mt-2">
+        <FilterBar selectedFilter={selectedFilter} onFilterChange={setSelectedFilter} />
+      </div>
 
       <div className="space-y-4 sm:space-y-5">
         {error && (
