@@ -272,13 +272,13 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
       </Button>
 
       {/* Post content */}
-      <div className="rounded-2xl border bg-white p-4 sm:p-6 shadow-sm">
+      <div className="rounded-3xl border border-white/70 glass p-4 sm:p-6 shadow-sm">
         {/* Header */}
         <div className="mb-4 sm:mb-6 flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               onClick={(e) => handleAuthorClick(e, activePost.author.id || '', activePost.author.name)}
-              className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bridge-blue-light)] to-[var(--bridge-green-light)] text-[var(--bridge-blue)] text-base sm:text-lg font-semibold hover:opacity-80 transition-opacity"
+              className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bridge-blue-light)] to-[var(--bridge-green-light)] text-[var(--bridge-blue)] text-base sm:text-lg font-semibold hover:opacity-80 transition-opacity ring-1 ring-white/70"
             >
               {activePost.author.name.charAt(0)}
             </button>
@@ -338,7 +338,7 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
         {/* Title and author controls */}
           <div className="mb-4 flex items-start justify-between gap-4">
           <div className="flex-1">
-            <h1 className="text-xl sm:text-2xl leading-snug">{activePost.title}</h1>
+            <h1 className="text-xl sm:text-2xl leading-snug font-display">{activePost.title}</h1>
             {activePost.status === 'hidden' && (
               <div className="mt-2">
                 <Badge className="rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-xs">
@@ -391,7 +391,7 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
             <Badge 
               key={tag} 
               variant="secondary" 
-              className="rounded-lg bg-[var(--bridge-blue-light)] text-[var(--bridge-blue)] hover:bg-[var(--bridge-blue-light)] text-xs sm:text-sm"
+              className="tag-pill text-xs sm:text-sm"
             >
               {tag}
             </Badge>
@@ -404,7 +404,7 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-2 sm:gap-4 border-t pt-4 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-4 border-t border-white/70 pt-4 flex-wrap">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -504,7 +504,7 @@ function ReplyInputCard({ replyText, onReplyTextChange, onSubmit, submitLabel, t
       onMouseMove={card3D.onMouseMove}
       onMouseEnter={card3D.onMouseEnter}
       onMouseLeave={card3D.onMouseLeave}
-      className="rounded-2xl border bg-white p-4 sm:p-6 shadow-sm"
+      className="rounded-3xl border border-white/70 glass-subtle p-4 sm:p-6 shadow-sm"
     >
       <h3 className="mb-4 text-base sm:text-lg font-semibold">{title}</h3>
       <div className="space-y-3">
@@ -512,7 +512,7 @@ function ReplyInputCard({ replyText, onReplyTextChange, onSubmit, submitLabel, t
           value={replyText}
           onChange={(e) => onReplyTextChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full min-h-[100px] sm:min-h-[120px] rounded-xl border bg-background p-3 sm:p-4 text-sm sm:text-base resize-none focus:outline-none focus:ring-2 focus:ring-[var(--bridge-blue)]"
+          className="w-full min-h-[100px] sm:min-h-[120px] rounded-2xl border border-white/70 bg-white/70 p-3 sm:p-4 text-sm sm:text-base resize-none focus:outline-none focus:ring-2 focus:ring-[var(--bridge-blue)]"
         />
         <div className="flex justify-end">
           <div
@@ -554,12 +554,12 @@ function ReplyCard({ reply, onAuthorClick, onHelpfulToggle, isHelpful }: {
       onMouseMove={card3D.onMouseMove}
       onMouseEnter={card3D.onMouseEnter}
       onMouseLeave={card3D.onMouseLeave}
-      className="rounded-2xl border bg-white p-4 sm:p-5 shadow-sm"
+      className="rounded-3xl border border-white/70 glass-subtle p-4 sm:p-5 shadow-sm"
     >
       <div className="mb-3 flex items-start gap-3">
         <button
           onClick={(e) => onAuthorClick(e, reply.author.id, reply.author.name)}
-          className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bridge-blue-light)] to-[var(--bridge-green-light)] text-[var(--bridge-blue)] text-sm sm:text-base hover:opacity-80 transition-opacity"
+          className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bridge-blue-light)] to-[var(--bridge-green-light)] text-[var(--bridge-blue)] text-sm sm:text-base hover:opacity-80 transition-opacity ring-1 ring-white/70"
         >
           {reply.author.name.charAt(0)}
         </button>

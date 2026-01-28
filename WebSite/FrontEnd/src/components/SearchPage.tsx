@@ -128,9 +128,14 @@ export function SearchPage({
 
   return (
     <div className="flex-1">
-      <h1 className="mb-4 sm:mb-6 text-2xl sm:text-3xl">
-        {t("search.title")}
-      </h1>
+      <div className="mb-5 sm:mb-8">
+        <div className="rounded-3xl border border-white/70 glass-subtle px-4 py-4 sm:px-6 sm:py-5">
+          <div className="mb-3 h-1 w-12 rounded-full bg-[var(--bridge-blue)]/30" />
+          <h1 className="section-title">
+            {t("search.title")}
+          </h1>
+        </div>
+      </div>
 
       {/* Search bar */}
       <div className="mb-4 sm:mb-6">
@@ -148,12 +153,12 @@ export function SearchPage({
                   handleSearch();
                 }
               }}
-              className="h-12 sm:h-14 rounded-2xl border-2 bg-white pl-10 sm:pl-12 pr-4 shadow-sm focus:border-[var(--bridge-blue)] text-sm sm:text-base"
+              className="h-12 sm:h-14 rounded-2xl border border-white/70 bg-white/70 pl-10 sm:pl-12 pr-4 shadow-sm focus:border-[var(--bridge-blue)] text-sm sm:text-base"
             />
           </div>
           <Button
             onClick={handleSearch}
-            className="h-12 sm:h-14 rounded-2xl px-6"
+            className="h-12 sm:h-14 rounded-full px-6 bg-[var(--bridge-blue)] hover:bg-[var(--bridge-blue)]/90 shadow-lg"
           >
             {t("actions.search")}
           </Button>
