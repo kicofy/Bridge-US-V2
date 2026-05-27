@@ -338,19 +338,19 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
         </div>
 
         {/* Title and author controls */}
-          <div className="mb-4 flex items-start justify-between gap-4">
-          <div className="flex-1">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl leading-snug font-display">{activePost.title}</h1>
-            {statusCopy && (
-              <PostStatusPanel status={activePost.status} translationStatus={activePost.translationStatus} language={i18n.language} />
-            )}
-            {!statusCopy && activePost.status === 'hidden' && (
-              <div className="mt-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {statusCopy && (
+                <PostStatusPanel status={activePost.status} translationStatus={activePost.translationStatus} language={i18n.language} />
+              )}
+              {!statusCopy && activePost.status === 'hidden' && (
                 <Badge className="rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-xs">
                   {t('posts.hidden')}
                 </Badge>
-              </div>
-            )}
+              )}
+            </div>
           </div>
           {isOwner && (
             <div className="flex items-center gap-2">
@@ -634,45 +634,30 @@ function PostStatusPanel({
 
   const isPending = status === 'pending';
   const Icon = isPending ? Clock3 : Languages;
-  const steps = copy.steps;
 
   return (
-    <div className="mt-4 max-w-3xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-start gap-3 px-4 py-4 sm:px-5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white">
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className={isPending ? 'rounded-full bg-blue-100 text-blue-700 border border-blue-200' : 'rounded-full bg-purple-100 text-purple-700 border border-purple-200'}>
-              {copy.badge}
-            </Badge>
-            <span className="text-xs text-muted-foreground">{copy.helper}</span>
-          </div>
-          <p className="mt-2 text-base font-semibold text-foreground">{copy.title}</p>
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{copy.message}</p>
-        </div>
+    <div
+      className={`inline-flex max-w-full items-start gap-2 rounded-xl border px-3 py-2 text-sm shadow-sm ${
+        isPending
+          ? 'border-blue-200 bg-blue-50 text-blue-900'
+          : 'border-purple-200 bg-purple-50 text-purple-900'
+      }`}
+    >
+      <div
+        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+          isPending ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white'
+        }`}
+      >
+        <Icon className="h-3.5 w-3.5" />
       </div>
-
-      <div className="border-t bg-slate-50/80 px-4 py-3 sm:px-5">
-        <div className="grid gap-2 sm:grid-cols-3">
-          {steps.map((step, index) => (
-            <div key={step} className="flex items-center gap-2 text-xs">
-              <span
-                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
-                  index === 0 || (!isPending && index <= 1)
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-white text-slate-500 ring-1 ring-slate-200'
-                }`}
-              >
-                {index + 1}
-              </span>
-              <span className={index === 0 || (!isPending && index <= 1) ? 'text-slate-800' : 'text-muted-foreground'}>
-                {step}
-              </span>
-            </div>
-          ))}
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="font-medium">{copy.badge}</span>
+          <span className={isPending ? 'text-blue-700' : 'text-purple-700'}>{copy.helper}</span>
         </div>
+        <p className={`mt-0.5 leading-relaxed ${isPending ? 'text-blue-800' : 'text-purple-800'}`}>
+          {copy.message}
+        </p>
       </div>
     </div>
   );
@@ -686,9 +671,8 @@ function getPostStatusCopy(status?: string, translationStatus?: string, language
       helper: isZh ? '仅作者和管理员可见' : 'Only visible to you and admins',
       title: isZh ? '帖子正在审核' : 'Post under review',
       message: isZh
-        ? '你的帖子已保存。审核通过后会自动发布，并继续在后台排队翻译。'
-        : 'Your post has been saved. It will publish after review and continue translating in the background.',
-      steps: isZh ? ['已保存', '审核通过后发布', '后台自动翻译'] : ['Saved', 'Publish after review', 'Auto-translate'],
+        ? '通过后自动发布并排队翻译。'
+        : 'Publishes automatically after review, then translation starts.',
     };
   }
   if (translationStatus === 'pending') {
@@ -697,9 +681,8 @@ function getPostStatusCopy(status?: string, translationStatus?: string, language
       helper: isZh ? '页面可正常浏览' : 'Page remains available',
       title: isZh ? '帖子已发布，正在翻译' : 'Published and translating',
       message: isZh
-        ? '其他语言版本正在后台生成。当前页面可以正常浏览，不需要等待翻译完成。'
-        : 'Other language versions are being generated in the background. You can keep using the page while translation finishes.',
-      steps: isZh ? ['已发布', '翻译排队中', '完成后自动展示'] : ['Published', 'Queued for translation', 'Shown automatically'],
+        ? '其他语言版本会完成后自动展示。'
+        : 'Other language versions will appear automatically.',
     };
   }
   return null;
