@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Shield, CheckCircle2, Info, Send, Flag } from 'lucide-react';
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Shield, CheckCircle2, Info, Send, Flag, Clock3, Languages } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { RichTextDisplay } from './RichTextDisplay';
@@ -341,45 +341,30 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
           <div className="mb-4 flex items-start justify-between gap-4">
           <div className="flex-1">
             <h1 className="text-xl sm:text-2xl leading-snug font-display">{activePost.title}</h1>
-            {activePost.status === 'hidden' && (
+            {statusCopy && (
+              <PostStatusPanel status={activePost.status} translationStatus={activePost.translationStatus} language={i18n.language} />
+            )}
+            {!statusCopy && activePost.status === 'hidden' && (
               <div className="mt-2">
                 <Badge className="rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-xs">
                   {t('posts.hidden')}
                 </Badge>
               </div>
             )}
-            {activePost.status === 'pending' && (
-              <div className="mt-2">
-                <Badge className="rounded-full bg-blue-100 text-blue-700 border border-blue-200 text-xs">
-                  {t('posts.pendingReview')}
-                </Badge>
-              </div>
-            )}
-            {activePost.translationStatus === 'pending' && (
-              <div className="mt-2">
-                <Badge className="rounded-full bg-purple-100 text-purple-700 border border-purple-200 text-xs">
-                  {t('posts.translating')}
-                </Badge>
-              </div>
-            )}
-            {statusCopy && (
-              <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                <p className="font-medium">{statusCopy.title}</p>
-                <p className="mt-1 text-blue-700">{statusCopy.message}</p>
-              </div>
-            )}
           </div>
           {isOwner && (
             <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleToggleVisibility}
-                disabled={statusUpdating}
-                className="rounded-xl"
-              >
-                {activePost.status === 'hidden' ? t('posts.show') : t('posts.hide')}
-              </Button>
+              {activePost.status !== 'pending' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleToggleVisibility}
+                  disabled={statusUpdating}
+                  className="rounded-xl"
+                >
+                  {activePost.status === 'hidden' ? t('posts.show') : t('posts.hide')}
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="ghost"
@@ -635,22 +620,86 @@ function ReplyCard({ reply, onAuthorClick, onHelpfulToggle, isHelpful }: {
   );
 }
 
+function PostStatusPanel({
+  status,
+  translationStatus,
+  language,
+}: {
+  status?: string;
+  translationStatus?: string;
+  language?: string;
+}) {
+  const copy = getPostStatusCopy(status, translationStatus, language);
+  if (!copy) return null;
+
+  const isPending = status === 'pending';
+  const Icon = isPending ? Clock3 : Languages;
+  const steps = copy.steps;
+
+  return (
+    <div className="mt-4 max-w-3xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex items-start gap-3 px-4 py-4 sm:px-5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className={isPending ? 'rounded-full bg-blue-100 text-blue-700 border border-blue-200' : 'rounded-full bg-purple-100 text-purple-700 border border-purple-200'}>
+              {copy.badge}
+            </Badge>
+            <span className="text-xs text-muted-foreground">{copy.helper}</span>
+          </div>
+          <p className="mt-2 text-base font-semibold text-foreground">{copy.title}</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{copy.message}</p>
+        </div>
+      </div>
+
+      <div className="border-t bg-slate-50/80 px-4 py-3 sm:px-5">
+        <div className="grid gap-2 sm:grid-cols-3">
+          {steps.map((step, index) => (
+            <div key={step} className="flex items-center gap-2 text-xs">
+              <span
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
+                  index === 0 || (!isPending && index <= 1)
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-white text-slate-500 ring-1 ring-slate-200'
+                }`}
+              >
+                {index + 1}
+              </span>
+              <span className={index === 0 || (!isPending && index <= 1) ? 'text-slate-800' : 'text-muted-foreground'}>
+                {step}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function getPostStatusCopy(status?: string, translationStatus?: string, language?: string) {
   const isZh = language === 'zh';
   if (status === 'pending') {
     return {
+      badge: isZh ? '审核中' : 'Under review',
+      helper: isZh ? '仅作者和管理员可见' : 'Only visible to you and admins',
       title: isZh ? '帖子正在审核' : 'Post under review',
       message: isZh
         ? '你的帖子已保存。审核通过后会自动发布，并继续在后台排队翻译。'
         : 'Your post has been saved. It will publish after review and continue translating in the background.',
+      steps: isZh ? ['已保存', '审核通过后发布', '后台自动翻译'] : ['Saved', 'Publish after review', 'Auto-translate'],
     };
   }
   if (translationStatus === 'pending') {
     return {
+      badge: isZh ? '翻译中' : 'Translating',
+      helper: isZh ? '页面可正常浏览' : 'Page remains available',
       title: isZh ? '帖子已发布，正在翻译' : 'Published and translating',
       message: isZh
         ? '其他语言版本正在后台生成。当前页面可以正常浏览，不需要等待翻译完成。'
         : 'Other language versions are being generated in the background. You can keep using the page while translation finishes.',
+      steps: isZh ? ['已发布', '翻译排队中', '完成后自动展示'] : ['Published', 'Queued for translation', 'Shown automatically'],
     };
   }
   return null;
