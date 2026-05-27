@@ -12,7 +12,7 @@ from app.schemas.ai import (
     AITranslateRequest,
     AITranslateResponse,
 )
-from app.services.ai_service import ask_question, moderate_text, translate_text
+from app.services.ai_service import ask_question_async, moderate_text_async, translate_text_async
 from app.services.ai_usage_service import enforce_ai_limit
 
 
@@ -26,7 +26,10 @@ async def ask(
     db: AsyncSession = Depends(get_db),
 ):
     await enforce_ai_limit(db, user.id)
-    answer = ask_question(payload.question)
+    answer = await ask_question_async(
+        payload.question,
+        [item.model_dump() for item in payload.history],
+    )
     return AIAskResponse(answer=answer)
 
 
@@ -37,7 +40,7 @@ async def translate(
     db: AsyncSession = Depends(get_db),
 ):
     await enforce_ai_limit(db, user.id)
-    text = translate_text(payload.text, payload.source_lang, payload.target_lang)
+    text = await translate_text_async(payload.text, payload.source_lang, payload.target_lang)
     return AITranslateResponse(text=text)
 
 
@@ -48,11 +51,10 @@ async def moderate(
     db: AsyncSession = Depends(get_db),
 ):
     await enforce_ai_limit(db, user.id)
-    result = moderate_text(payload.title, payload.content)
+    result = await moderate_text_async(payload.title, payload.content)
     return AIModerateResponse(
         risk_score=int(result.get("risk_score", 0)),
         labels=list(result.get("labels", [])),
         decision=str(result.get("decision", "pass")),
         reason=str(result.get("reason", "")),
     )
-

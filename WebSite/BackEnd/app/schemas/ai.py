@@ -1,8 +1,15 @@
 from pydantic import BaseModel, Field
+from typing import Literal
+
+
+class AIMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=4000)
 
 
 class AIAskRequest(BaseModel):
     question: str = Field(min_length=2, max_length=2000)
+    history: list[AIMessage] = Field(default_factory=list, max_length=20)
 
 
 class AIAskResponse(BaseModel):
@@ -29,4 +36,3 @@ class AIModerateResponse(BaseModel):
     labels: list[str]
     decision: str
     reason: str
-

@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     refresh_token_days: int = 14
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"
+    openai_timeout_seconds: int = 45
     supported_languages: str = "en,zh,ko,vi,ne"
     moderation_review_threshold: int = 60
     moderation_reject_threshold: int = 85
@@ -58,4 +59,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-

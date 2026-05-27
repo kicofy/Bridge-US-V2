@@ -68,10 +68,27 @@ async def get_user_detail(db: AsyncSession, user_id: str) -> dict:
 
 
 async def set_user_status(db: AsyncSession, user_id: str, status: str, admin_id: str) -> User:
+    if status not in {"active", "banned"}:
+        raise AppError(code="invalid_status", message="Invalid user status", status_code=400)
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if user is None:
         raise AppError(code="user_not_found", message="User not found", status_code=404)
+    if status == "banned":
+        if user.id == admin_id:
+            raise AppError(code="cannot_ban_self", message="Admins cannot ban their own account", status_code=400)
+        if settings.root_account and user.email == settings.root_account:
+            raise AppError(code="cannot_ban_root_admin", message="Root admin cannot be banned", status_code=403)
+        if user.role == "admin" and user.status == "active":
+            active_admin_count = await db.scalar(
+                select(func.count()).select_from(User).where(User.role == "admin", User.status == "active")
+            )
+            if int(active_admin_count or 0) <= 1:
+                raise AppError(
+                    code="cannot_ban_last_admin",
+                    message="At least one active admin account is required",
+                    status_code=400,
+                )
     user.status = status
     await log_action(db, admin_id, "user", user_id, f"user_{status}", None)
     await create_notification(
@@ -177,4 +194,3 @@ def _infer_category_slug(tags: list[str]) -> str | None:
         if any(key in lowered for key in keys):
             return slug
     return None
-

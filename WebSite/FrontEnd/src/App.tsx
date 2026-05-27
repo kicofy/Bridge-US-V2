@@ -66,6 +66,15 @@ function AppShell() {
 
   const backgroundClass = useMemo(() => 'aurora-bg', []);
 
+  useEffect(() => {
+    document.title = getRouteTitle({
+      currentPage,
+      pathname: location.pathname,
+      currentUserName: currentUser?.displayName,
+      language,
+    });
+  }, [currentPage, currentUser?.displayName, language, location.pathname]);
+
   const handleLanguageChange = (next: LanguageCode) => {
     setLanguage(next);
     if (isAuthenticated) {
@@ -142,10 +151,11 @@ function AppShell() {
       location.pathname.startsWith('/login') ||
       location.pathname.startsWith('/register') ||
       location.pathname.startsWith('/forgot-password');
-    if (!isAuthRoute) {
+    const isProtectedRoute = isProtectedPath(location.pathname);
+    if (!isAuthRoute && !(isProtectedRoute && !isAuthenticated)) {
       sessionStorage.setItem('lastNonAuthPath', path);
     }
-  }, [location.pathname, location.search, location.hash]);
+  }, [isAuthenticated, location.pathname, location.search, location.hash]);
 
   const handleNotificationClick = (notification: Notification) => {
     if (notification.link) {
@@ -155,9 +165,8 @@ function AppShell() {
     }
   };
 
-  const handlePublishPost = (newPost: NewPost) => {
-    console.log('New post submitted:', newPost);
-    navigate('/profile');
+  const handlePublishPost = (_newPost: NewPost) => {
+    navigate(`/profile?posted=${Date.now()}`);
   };
 
   return (
@@ -349,6 +358,12 @@ function PostDetailRoute({ selectedPost, onBack, onAuthorClick, language, isAuth
     });
   }, [id, language, selectedPost, isAuthenticated]);
 
+  useEffect(() => {
+    if (post?.title) {
+      document.title = formatDocumentTitle(post.title);
+    }
+  }, [post?.title]);
+
   if (!post) {
     return error ? (
       <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -393,10 +408,28 @@ function ProfileRoute({ selectedUserId, onPostClick, onAuthorClick, onAdminAcces
 }
 
 function RequireAuth({ isAuthenticated, children }: { isAuthenticated: boolean; children: JSX.Element }) {
+  const location = useLocation();
   if (!isAuthenticated) {
+    const target = location.pathname + location.search + location.hash;
+    try {
+      sessionStorage.setItem('authRedirectPath', target);
+    } catch {
+      // Ignore storage failures and still show login.
+    }
     return <Navigate to="/login" replace />;
   }
   return children;
+}
+
+function isProtectedPath(pathname: string) {
+  return (
+    pathname.startsWith('/ai') ||
+    pathname.startsWith('/profile') ||
+    pathname.startsWith('/notifications') ||
+    pathname.startsWith('/posts/new') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/settings')
+  );
 }
 
 function GuestOnly({ children }: { children: JSX.Element }) {
@@ -435,4 +468,68 @@ function mapPostResponse(item: PostResponse): Post {
     replyCount: 0,
     timestamp: dateText,
   };
+}
+
+function getRouteTitle({
+  currentPage,
+  pathname,
+  currentUserName,
+  language,
+}: {
+  currentPage: string;
+  pathname: string;
+  currentUserName?: string | null;
+  language: string;
+}) {
+  const isZh = language === 'zh';
+  const appName = 'BridgeUS';
+  const titles: Record<string, string> = isZh
+    ? {
+        home: '首页',
+        search: '搜索',
+        'ai-qa': 'AI 问答',
+        profile: pathname.startsWith('/users/')
+          ? '用户资料'
+          : currentUserName
+            ? `${currentUserName} 的资料`
+            : '我的资料',
+        notifications: '通知',
+        'create-post': '发布新帖子',
+        'post-detail': '帖子详情',
+        admin: '管理后台',
+        settings: '设置',
+      }
+    : {
+        home: 'Home',
+        search: 'Search',
+        'ai-qa': 'AI Q&A',
+        profile: pathname.startsWith('/users/')
+          ? 'User Profile'
+          : currentUserName
+            ? `${currentUserName}'s Profile`
+            : 'My Profile',
+        notifications: 'Notifications',
+        'create-post': 'New Post',
+        'post-detail': 'Post',
+        admin: 'Admin',
+        settings: 'Settings',
+      };
+
+  if (pathname.startsWith('/login')) {
+    return `${isZh ? '登录' : 'Log In'} | ${appName}`;
+  }
+  if (pathname.startsWith('/register')) {
+    return `${isZh ? '注册' : 'Sign Up'} | ${appName}`;
+  }
+  if (pathname.startsWith('/forgot-password')) {
+    return `${isZh ? '找回密码' : 'Reset Password'} | ${appName}`;
+  }
+  const title = titles[currentPage] ?? titles.home;
+  return currentPage === 'home' ? appName : `${title} | ${appName}`;
+}
+
+function formatDocumentTitle(title: string) {
+  const cleanTitle = title.trim().replace(/\s+/g, ' ');
+  const maxLength = 70;
+  return cleanTitle.length > maxLength ? `${cleanTitle.slice(0, maxLength - 1)}… | BridgeUS` : `${cleanTitle} | BridgeUS`;
 }

@@ -7,8 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.errors import AppError
 from app.models.models import Appeal, ModerationAction, ModerationLog, Post, PostTranslation
-from app.services.ai_service import moderate_text
+from app.services.ai_service import moderate_text_async
 from app.services.notification_service import create_notification
+from app.services.post_translation_service import enqueue_missing_post_translations
 
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 async def screen_post(db: AsyncSession, post: Post, title: str, content: str) -> ModerationLog:
     try:
-        result = moderate_text(title, content)
+        result = await moderate_text_async(title, content)
         risk_score = int(result.get("risk_score", 0))
         labels = result.get("labels", [])
         decision = result.get("decision", "pass")
@@ -170,6 +171,7 @@ async def resolve_post_review(
         post.status = "published"
         if post.published_at is None:
             post.published_at = datetime.now(timezone.utc)
+        await enqueue_missing_post_translations(db, post.id)
     elif action == "reject":
         post.status = "hidden"
     else:
@@ -207,4 +209,3 @@ async def resolve_post_review(
         dedupe_key=f"post_review:{post.id}:{action}",
     )
     return post
-

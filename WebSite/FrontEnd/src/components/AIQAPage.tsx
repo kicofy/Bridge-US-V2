@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
 import { RichTextDisplay } from './RichTextDisplay';
-import { askQuestion } from '../api/ai';
+import { AIHistoryMessage, askQuestion } from '../api/ai';
 import { ApiError } from '../api/client';
 import { useTranslation } from 'react-i18next';
 
@@ -216,6 +216,7 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
   const handleSendMessage = async (content?: string) => {
     const messageContent = content || inputValue.trim();
     if (!messageContent || isTyping) return;
+    const history = buildConversationHistory(messages);
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -229,7 +230,7 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
     setIsTyping(true);
 
     try {
-      const response = await askQuestion(messageContent);
+      const response = await askQuestion(messageContent, history);
       const assistantId = (Date.now() + 1).toString();
       const assistantMessage: Message = {
         id: assistantId,
@@ -261,6 +262,17 @@ export function AIQAPage({ language = 'en' }: AIQAPageProps) {
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const buildConversationHistory = (items: Message[]): AIHistoryMessage[] => {
+    return items
+      .filter((message) => !(message.id === '1' && message.role === 'assistant'))
+      .map((message) => ({
+        role: message.role,
+        content: (message.fullContent || message.content).trim(),
+      }))
+      .filter((message) => message.content.length > 0)
+      .slice(-12);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

@@ -8,8 +8,11 @@ from app.core.errors import AppError
 from app.models.models import Category, Post, PostTag, PostTranslation, Profile, Tag, User
 from app.services.notification_service import create_notification
 from app.schemas.post import PostCreateRequest, PostUpdateRequest
-from app.services.ai_service import translate_post, translate_text
 from app.services.moderation_service import screen_post
+from app.services.post_translation_service import (
+    enqueue_missing_post_translations,
+    ensure_pending_post_translation,
+)
 
 
 def _languages() -> list[str]:
@@ -107,6 +110,7 @@ async def update_post(
 
         if post.status == "published":
             content_for_ai = _extract_editorjs_text(original.content)
+            await db.commit()
             await screen_post(db, post, original.title, content_for_ai)
             if post.status == "published":
                 await _translate_missing(
@@ -115,6 +119,7 @@ async def update_post(
                     post.original_language,
                     original.title,
                     content_for_ai,
+                    reset_existing=True,
                 )
 
     await db.commit()
@@ -197,6 +202,8 @@ async def set_post_visibility(
     post.status = status
     if status == "published" and post.published_at is None:
         post.published_at = datetime.now(timezone.utc)
+    if status == "published":
+        await _translate_missing(db, post.id, post.original_language, "", "")
     await db.commit()
     await db.refresh(post)
     return post
@@ -217,6 +224,7 @@ async def publish_post(db: AsyncSession, post_id: str) -> Post:
     if original is None:
         raise AppError(code="post_translation_missing", message="Original translation missing", status_code=500)
     content_for_ai = _extract_editorjs_text(original.content)
+    await db.commit()
     await screen_post(db, post, original.title, content_for_ai)
     if post.status == "published":
         await _translate_missing(db, post.id, post.original_language, original.title, content_for_ai)
@@ -226,32 +234,14 @@ async def publish_post(db: AsyncSession, post_id: str) -> Post:
 
 
 async def _translate_missing(
-    db: AsyncSession, post_id: str, source_lang: str, title: str, content: str
+    db: AsyncSession,
+    post_id: str,
+    source_lang: str,
+    title: str,
+    content: str,
+    reset_existing: bool = False,
 ) -> None:
-    for lang in _languages():
-        if lang == source_lang:
-            continue
-        result = await db.execute(
-            select(PostTranslation).where(
-                PostTranslation.post_id == post_id,
-                PostTranslation.language == lang,
-            )
-        )
-        exists = result.scalar_one_or_none()
-        if exists is not None:
-            continue
-        translated_title, translated_content = translate_post(title, content, source_lang, lang)
-        db.add(
-            PostTranslation(
-                post_id=post_id,
-                language=lang,
-                title=translated_title,
-                content=translated_content,
-                status="ready",
-                translated_by="ai",
-                model=settings.openai_model,
-            )
-        )
+    await enqueue_missing_post_translations(db, post_id, reset_existing=reset_existing)
 
 
 async def _to_response(db: AsyncSession, post: Post, language: str) -> dict:
@@ -261,33 +251,14 @@ async def _to_response(db: AsyncSession, post: Post, language: str) -> dict:
             PostTranslation.language == language,
         )
     )
-    translation = translation_result.scalar_one_or_none()
+    requested_translation = translation_result.scalar_one_or_none()
+    translation = requested_translation
+    if translation is not None and (translation.status != "ready" or not translation.content):
+        translation = None
     if translation is None:
-        # Try to create translation on the fly if missing and language is supported
         if language in _languages() and language != post.original_language:
-            source_result = await db.execute(
-                select(PostTranslation).where(
-                    PostTranslation.post_id == post.id,
-                    PostTranslation.language == post.original_language,
-                )
-            )
-            source_translation = source_result.scalar_one_or_none()
-            if source_translation is not None:
-                translated_title = translate_text(source_translation.title, post.original_language, language)
-                translated_content = translate_text(source_translation.content, post.original_language, language)
-                new_translation = PostTranslation(
-                    post_id=post.id,
-                    language=language,
-                    title=translated_title,
-                    content=translated_content,
-                    status="ready",
-                    translated_by="ai",
-                    model=settings.openai_model,
-                )
-                db.add(new_translation)
-                await db.commit()
-                translation = new_translation
-
+            if requested_translation is None:
+                await ensure_pending_post_translation(db, post.id, language)
         if translation is None:
             fallback_result = await db.execute(
                 select(PostTranslation).where(
@@ -298,7 +269,7 @@ async def _to_response(db: AsyncSession, post: Post, language: str) -> dict:
             translation = fallback_result.scalar_one_or_none()
     if translation is None:
         raise AppError(code="post_translation_missing", message="Translation missing", status_code=500)
-    translation_status = "ready" if translation.language == language else "pending"
+    translation_status = "ready" if requested_translation is not None and requested_translation.status == "ready" else "pending"
 
     tag_result = await db.execute(
         select(Tag.slug)
@@ -349,6 +320,7 @@ async def process_post_submission(db: AsyncSession, post_id: str) -> None:
     if original is None:
         raise AppError(code="post_translation_missing", message="Original translation missing", status_code=500)
 
+    await db.commit()
     await screen_post(db, post, original.title, original.content)
     if post.status == "published":
         await _translate_missing(db, post.id, post.original_language, original.title, original.content)
@@ -387,4 +359,3 @@ async def _validate_category(db: AsyncSession, category_id: str) -> None:
     category = result.scalar_one_or_none()
     if category is None:
         raise AppError(code="category_not_found", message="Category not found", status_code=404)
-
