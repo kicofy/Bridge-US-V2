@@ -52,6 +52,16 @@
     build: {
       target: 'esnext',
       outDir: 'build',
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return;
+            if (id.includes('@editorjs')) return 'editor';
+            if (id.includes('recharts')) return 'charts';
+            return 'vendor';
+          },
+        },
+      },
     },
     server: {
       host: '0.0.0.0',

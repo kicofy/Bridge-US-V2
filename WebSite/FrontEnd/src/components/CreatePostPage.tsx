@@ -4,14 +4,14 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { EditorJsEditor } from './EditorJsEditor';
 import { use3DHover } from '../hooks/use3DHover';
-import { createPost } from '../api/posts';
+import { createPost, PostResponse } from '../api/posts';
 import { ApiError } from '../api/client';
 import { useTranslation } from 'react-i18next';
 import { stripRichText } from '../utils/text';
 
 interface CreatePostPageProps {
   onBack: () => void;
-  onPublish: (post: NewPost) => void;
+  onPublish: (post: PostResponse) => void;
   language: string;
 }
 
@@ -82,7 +82,7 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
     ].filter(Boolean);
 
     try {
-      await createPost({
+      const createdPost = await createPost({
         title: normalizedTitle,
         content: normalizedContent,
         tags: normalizedTags,
@@ -90,12 +90,7 @@ export function CreatePostPage({ onBack, onPublish, language }: CreatePostPagePr
         status: 'pending',
         category_id: null,
       });
-      onPublish({
-        title: normalizedTitle,
-        category,
-        content: normalizedContent,
-        tags,
-      });
+      onPublish(createdPost);
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Failed to publish post';
       setSubmitError(message);

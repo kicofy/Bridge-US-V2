@@ -81,7 +81,7 @@ const mockReplies: Reply[] = [
 ];
 
 export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPageProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const currentUser = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken));
   const [replyText, setReplyText] = useState('');
@@ -94,6 +94,7 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
   const [postHelpfulCount, setPostHelpfulCount] = useState(post.helpfulCount);
   const [replyHelpfulState, setReplyHelpfulState] = useState<Record<string, boolean>>({});
   const [statusUpdating, setStatusUpdating] = useState(false);
+  const statusCopy = getPostStatusCopy(activePost.status, activePost.translationStatus, i18n.language);
 
   useEffect(() => {
     setActivePost(post);
@@ -130,7 +131,8 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
     if (!activePost.id) return;
     setReplyLoading(true);
     setReplyError(null);
-    listReplies({ postId: activePost.id, limit: 50, offset: 0, auth: isAuthenticated })
+    const language = i18n.language === 'zh' ? 'zh' : 'en';
+    listReplies({ postId: activePost.id, language, limit: 50, offset: 0, auth: isAuthenticated })
       .then((items) => {
         setReplies(items.map(mapReply));
       })
@@ -139,7 +141,7 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
         setReplyError(message);
       })
       .finally(() => setReplyLoading(false));
-  }, [activePost.id, isAuthenticated]);
+  }, [activePost.id, i18n.language, isAuthenticated]);
 
   const handleSubmitReply = async () => {
     if (!replyText.trim()) return;
@@ -360,6 +362,12 @@ export function PostDetailPage({ post, onBack, onAuthorClick }: PostDetailPagePr
                 </Badge>
               </div>
             )}
+            {statusCopy && (
+              <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                <p className="font-medium">{statusCopy.title}</p>
+                <p className="mt-1 text-blue-700">{statusCopy.message}</p>
+              </div>
+            )}
           </div>
           {isOwner && (
             <div className="flex items-center gap-2">
@@ -537,7 +545,7 @@ function ReplyInputCard({ replyText, onReplyTextChange, onSubmit, submitLabel, t
   );
 }
 
-function ReplyCard({ reply, onAuthorClick, onHelpfulToggle, isHelpful }: {
+function ReplyCard({ reply, onAuthorClick, onHelpfulToggle, isHelpful }: { 
   reply: Reply;
   onAuthorClick: (e: React.MouseEvent, authorId: string, authorName: string) => void;
   onHelpfulToggle: (replyId: string) => void;
@@ -625,4 +633,25 @@ function ReplyCard({ reply, onAuthorClick, onHelpfulToggle, isHelpful }: {
       </div>
     </div>
   );
+}
+
+function getPostStatusCopy(status?: string, translationStatus?: string, language?: string) {
+  const isZh = language === 'zh';
+  if (status === 'pending') {
+    return {
+      title: isZh ? '帖子正在审核' : 'Post under review',
+      message: isZh
+        ? '你的帖子已保存。审核通过后会自动发布，并继续在后台排队翻译。'
+        : 'Your post has been saved. It will publish after review and continue translating in the background.',
+    };
+  }
+  if (translationStatus === 'pending') {
+    return {
+      title: isZh ? '帖子已发布，正在翻译' : 'Published and translating',
+      message: isZh
+        ? '其他语言版本正在后台生成。当前页面可以正常浏览，不需要等待翻译完成。'
+        : 'Other language versions are being generated in the background. You can keep using the page while translation finishes.',
+    };
+  }
+  return null;
 }

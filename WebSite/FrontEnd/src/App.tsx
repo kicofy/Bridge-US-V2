@@ -1,29 +1,29 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { AuthPage } from './components/AuthPage';
 import { Navigation } from './components/Navigation';
 import { BottomNav } from './components/BottomNav';
 import { CategorySidebar } from './components/CategorySidebar';
 import { HomePage } from './components/HomePage';
-import { SearchPage } from './components/SearchPage';
-import { ProfilePage } from './components/ProfilePage';
-import { AIQAPage } from './components/AIQAPage';
-import { PostDetailPage } from './components/PostDetailPage';
-import { NotificationsPage } from './components/NotificationsPage';
-import { CreatePostPage, NewPost } from './components/CreatePostPage';
 import { CreatePostButton } from './components/CreatePostButton';
-import { AdminDashboard } from './components/AdminDashboard';
 import { previewText } from './utils/text';
-import { SettingsPage } from './components/SettingsPage';
 import { Post } from './components/PostCard';
 import { Notification } from './components/NotificationDropdown';
-import { mockPosts } from './lib/mockData';
 import { ApiError } from './api/client';
 import { getPost, PostResponse } from './api/posts';
 import { getMyProfile, updateMyProfile } from './api/profile';
 import { useAuthStore } from './store/auth';
 import { setLanguage, LanguageCode, supportedLanguages } from './i18n';
 import { useTranslation } from 'react-i18next';
+
+const AuthPage = lazy(() => import('./components/AuthPage').then((module) => ({ default: module.AuthPage })));
+const SearchPage = lazy(() => import('./components/SearchPage').then((module) => ({ default: module.SearchPage })));
+const ProfilePage = lazy(() => import('./components/ProfilePage').then((module) => ({ default: module.ProfilePage })));
+const AIQAPage = lazy(() => import('./components/AIQAPage').then((module) => ({ default: module.AIQAPage })));
+const PostDetailPage = lazy(() => import('./components/PostDetailPage').then((module) => ({ default: module.PostDetailPage })));
+const NotificationsPage = lazy(() => import('./components/NotificationsPage').then((module) => ({ default: module.NotificationsPage })));
+const CreatePostPage = lazy(() => import('./components/CreatePostPage').then((module) => ({ default: module.CreatePostPage })));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard').then((module) => ({ default: module.AdminDashboard })));
+const SettingsPage = lazy(() => import('./components/SettingsPage').then((module) => ({ default: module.SettingsPage })));
 
 export default function App() {
   return (
@@ -165,19 +165,23 @@ function AppShell() {
     }
   };
 
-  const handlePublishPost = (_newPost: NewPost) => {
-    navigate(`/profile?posted=${Date.now()}`);
+  const handlePublishPost = (newPost: PostResponse) => {
+    const mapped = mapPostResponse(newPost);
+    setSelectedPost(mapped);
+    navigate(`/posts/${newPost.id}?created=1`);
   };
 
   return (
     <div className={`min-h-screen bg-background pb-16 md:pb-0 ${backgroundClass}`}>
       {currentPage === 'auth' ? (
-        <Routes>
-          <Route path="/login" element={<GuestOnly><AuthPage initialView="login" /></GuestOnly>} />
-          <Route path="/register" element={<GuestOnly><AuthPage initialView="register" /></GuestOnly>} />
-          <Route path="/forgot-password" element={<GuestOnly><AuthPage initialView="forgot-password" /></GuestOnly>} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+        <Suspense fallback={<RouteLoading />}>
+          <Routes>
+            <Route path="/login" element={<GuestOnly><AuthPage initialView="login" /></GuestOnly>} />
+            <Route path="/register" element={<GuestOnly><AuthPage initialView="register" /></GuestOnly>} />
+            <Route path="/forgot-password" element={<GuestOnly><AuthPage initialView="forgot-password" /></GuestOnly>} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Suspense>
       ) : (
         <>
           <Navigation
@@ -198,6 +202,7 @@ function AppShell() {
               )}
 
               <main className="flex-1 min-w-0">
+                <Suspense fallback={<RouteLoading />}>
                 <Routes>
                   <Route
                     path="/"
@@ -305,6 +310,7 @@ function AppShell() {
                   <Route path="/register" element={<Navigate to="/" replace />} />
                   <Route path="/forgot-password" element={<Navigate to="/" replace />} />
                 </Routes>
+                </Suspense>
               </main>
             </div>
           </div>
@@ -318,6 +324,15 @@ function AppShell() {
           <BottomNav currentPage={currentPage} onNavigate={handleNavigate} />
         </>
       )}
+    </div>
+  );
+}
+
+function RouteLoading() {
+  return (
+    <div className="space-y-4">
+      <div className="h-20 animate-pulse rounded-2xl border bg-white/70" />
+      <div className="h-40 animate-pulse rounded-2xl border bg-white/70" />
     </div>
   );
 }
